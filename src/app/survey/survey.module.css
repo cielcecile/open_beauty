@@ -1,0 +1,80 @@
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    background-color: var(--c-base);
+    min-height: 100vh;
+}
+
+.title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--c-text);
+    margin-bottom: 2rem;
+}
+
+.questionCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.questionLabel {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: block;
+    color: var(--c-text);
+}
+
+.optionsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.optionButton {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+.optionButton input {
+    display: none;
+}
+
+.optionButton.selected {
+    background-color: var(--c-main);
+    border-color: var(--c-accent);
+    color: var(--c-text);
+    font-weight: 600;
+}
+
+.submitButton {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--c-accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 2rem;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.submitButton:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
+    box-shadow: none;
+}

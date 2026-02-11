@@ -1,0 +1,93 @@
+.yunaWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    animation: fadeIn 1s ease-out;
+}
+
+.avatarFrame {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid var(--c-main);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.avatarImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatarFallback {
+    width: 100%;
+    height: 100%;
+    background-color: var(--c-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-text);
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.speechBubble {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: relative;
+    max-width: 85%;
+    border: 1px solid #f0f0f0;
+}
+
+.speechBubble::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid white;
+}
+
+.yunaName {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--c-accent);
+    margin-bottom: 0.5rem;
+    display: block;
+    text-align: center;
+}
+
+.message {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--c-text);
+    text-align: center;
+}
+
+/* Character Animation */
+.floating {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
