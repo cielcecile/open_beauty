@@ -53,7 +53,7 @@ export default function ChatBot() {
     };
 
     return (
-        <div className={styles.chatWidget}>
+        <>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -121,6 +121,6 @@ export default function ChatBot() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </>
     );
 }
