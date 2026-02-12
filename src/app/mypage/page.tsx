@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import styles from './mypage.module.css';
 
 // Mock Data
@@ -37,7 +38,7 @@ export default function MyPage() {
                 animate={{ opacity: 1, y: 0 }}
             >
                 <div style={{ position: 'relative' }}>
-                    <img src="/yuki_profile.png" className={styles.avatar} alt="Profile" />
+                    <Image src="/yuki_profile.png" className={styles.avatar} alt="Profile" width={96} height={96} unoptimized />
                 </div>
                 <div className={styles.profileInfo}>
                     <h2>Yuki Tanaka <span style={{ fontSize: '0.9rem', color: 'var(--c-accent)', fontWeight: 'normal' }}>@yuki_beauty</span></h2>

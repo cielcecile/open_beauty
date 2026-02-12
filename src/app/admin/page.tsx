@@ -1,7 +1,5 @@
-'use client';
-
-import { redirect } from 'next/navigation';
+import AdminDashboard from '@/components/admin/Dashboard';
 
 export default function AdminPage() {
-    redirect('/admin/hospitals');
+    return <AdminDashboard />;
 }

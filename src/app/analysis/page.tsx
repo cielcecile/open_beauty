@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Radar } from 'react-chartjs-2';
 import {
@@ -14,6 +15,7 @@ import {
 } from 'chart.js';
 import html2canvas from 'html2canvas';
 
+import Image from 'next/image';
 import Yuna from '@/components/Yuna';
 import styles from './analysis.module.css';
 
@@ -52,18 +54,29 @@ const CLINICS = [
 ];
 
 export default function AnalysisPage() {
+    const router = useRouter();
     const [step, setStep] = useState<'ENTRY' | 'UPLOAD' | 'SURVEY' | 'ANALYZING' | 'RESULT'>('ENTRY');
 
-    // State
-    const [image, setImage] = useState<string | null>(null);
-    const [analysisResult, setAnalysisResult] = useState<any>(null);
-    const [surveyData, setSurveyData] = useState({
-        ageGroup: '',
-        skinType: '',
-        concerns: [] as string[],
-        budget: '',
-        downtime: ''
-    });
+        // State
+        const [image, setImage] = useState<string | null>(null);
+        type SurveyData = {
+            ageGroup: string;
+            skinType: string;
+            concerns: string[];
+            budget: string;
+            downtime: string;
+        };
+
+        type AnalysisResult = { faceType: string; skinAge?: { apparentAge: number } } | null;
+
+        const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(null);
+        const [surveyData, setSurveyData] = useState<SurveyData>({
+            ageGroup: '',
+            skinType: '',
+            concerns: [],
+            budget: '',
+            downtime: ''
+        });
 
     // Mock Scores
     const [scores, setScores] = useState([0, 0, 0, 0, 0]);
@@ -86,7 +99,7 @@ export default function AnalysisPage() {
         setStep('SURVEY');
     };
 
-    const handleSurveySelect = (key: string, value: string) => {
+    const handleSurveySelect = (key: keyof SurveyData, value: string) => {
         if (key === 'concerns') {
             setSurveyData(prev => {
                 const current = prev.concerns;
@@ -94,8 +107,7 @@ export default function AnalysisPage() {
                 return { ...prev, concerns: [...current, value] };
             });
         } else {
-            // @ts-ignore
-            setSurveyData(prev => ({ ...prev, [key]: value }));
+            setSurveyData(prev => ({ ...(prev as SurveyData), [key]: value } as SurveyData));
         }
     };
 
@@ -189,9 +201,8 @@ export default function AnalysisPage() {
 
                 {image && (
                     <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                        <div style={{ display: 'inline-block', position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '3px solid #eee' }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={image} alt="Analyzed" style={{ width: '120px', height: '120px', objectFit: 'cover', display: 'block' }} />
+                        <div style={{ display: 'inline-block', position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '3px solid #eee', width: 120, height: 120 }}>
+                            <Image src={image} alt="Analyzed" width={120} height={120} style={{ objectFit: 'cover', display: 'block', borderRadius: 12 }} unoptimized />
                             <div style={{ position: 'absolute', bottom: 0, right: 0, background: 'rgba(51,51,51,0.8)', color: 'white', fontSize: '0.6rem', padding: '2px 6px', borderTopLeftRadius: '6px' }}>Analyzed</div>
                         </div>
                     </div>
@@ -337,26 +348,46 @@ export default function AnalysisPage() {
                     <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>アンケートのみでタイプを診断します</div>
                 </button>
             </div>
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#888', textDecoration: 'underline' }}>
+                    前のページに戻る
+                </button>
+            </div>
         </div>
     );
 
     const renderUpload = () => (
         <div className={styles.container}>
-            <h1 className={styles.title}>写真アップロード</h1>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                <button
+                    onClick={() => setStep('ENTRY')}
+                    style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: '0.5rem' }}
+                >
+                    &larr;
+                </button>
+                <h1 className={styles.title} style={{ margin: 0, flex: 1, textAlign: 'center' }}>写真アップロード</h1>
+            </div>
             <div className={styles.uploadBox} onClick={() => document.getElementById('file-input')?.click()}>
                 <span className={styles.icon}>📸</span>
                 <p className={styles.uploadText}>分析する写真をアップロード</p>
                 <p className={styles.hintText}>正面から明るい照明の下で撮影してください</p>
                 <input id="file-input" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
             </div>
-            <button onClick={() => setStep('ENTRY')} style={{ display: 'block', margin: '0 auto', background: 'none', border: 'none', color: '#888', textDecoration: 'underline' }}>戻る</button>
         </div>
     );
 
     const renderSurvey = () => (
         <div className={styles.container}>
-            <h1 className={styles.title} style={{ fontSize: '1.4rem' }}>基本情報を教えてください</h1>
-            {image && <img src={image} alt="uploaded" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 1.5rem auto', display: 'block', border: '2px solid #d4a373' }} />}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                <button
+                    onClick={() => setStep(image ? 'UPLOAD' : 'ENTRY')}
+                    style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: '0.5rem' }}
+                >
+                    &larr;
+                </button>
+                <h1 className={styles.title} style={{ margin: 0, flex: 1, textAlign: 'center', fontSize: '1.4rem' }}>基本情報を教えてください</h1>
+            </div>
+            {image && <Image src={image} alt="uploaded" width={60} height={60} style={{ borderRadius: '50%', objectFit: 'cover', margin: '0 auto 1.5rem auto', display: 'block', border: '2px solid #d4a373' }} unoptimized />}
             <div className={styles.surveyContainer}>
                 {/* Survey content same as before ... */}
                 <div style={{ marginBottom: '1.5rem' }}>
@@ -381,7 +412,6 @@ export default function AnalysisPage() {
                 </div>
                 <div style={{ textAlign: 'center' }}>
                     <button className={styles.analyzeBtn} onClick={startComprehensiveAnalysis} disabled={!surveyData.ageGroup || surveyData.concerns.length === 0} style={{ opacity: (!surveyData.ageGroup || surveyData.concerns.length === 0) ? 0.5 : 1 }}>次へ（診断開始） &rarr;</button>
-                    <button onClick={() => setStep('ENTRY')} style={{ display: 'block', margin: '1rem auto 0 auto', background: 'none', border: 'none', color: '#888', textDecoration: 'underline' }}>戻る</button>
                 </div>
             </div>
         </div>

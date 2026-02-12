@@ -11,8 +11,16 @@ export interface Clinic {
     name: string;
     category: 'DERMATOLOGY' | 'PLASTIC' | 'DENTISTRY' | 'ORIENTAL';
     description: string;
+    detailDescription?: string;
     image: string;
     rank: number;
+    chatbotStatus?: 'ACTIVE' | 'INACTIVE';
+    chatbotPrompt?: string;
+    pricing?: { id: string; title: string; price: string; eventPrice?: string; discountPercent?: number }[];
+    faqs?: { id: string; question: string; answer: string }[];
+    chatbotTrainingFiles?: string[];
+    address?: string;
+    location?: { lat: number; lng: number };
 }
 
 export const INITIAL_CLINICS: Clinic[] = [

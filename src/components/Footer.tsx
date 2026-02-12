@@ -9,7 +9,7 @@ export default function Footer() {
                 <a href="#" className={styles.link}>プライバシーポリシー</a>
                 <a href="#" className={styles.link}>お問い合わせ</a>
             </div>
-            <p className={styles.copy}>&copy; 2026 Aureum. All rights reserved.</p>
+            <p className={styles.copy}>&copy; 2026 AUREUM BEAUTY. All rights reserved.</p>
         </footer>
     );
 }

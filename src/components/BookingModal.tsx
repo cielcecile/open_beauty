@@ -34,7 +34,8 @@ export default function BookingModal({ onClose, treatmentName }: BookingModalPro
             } else {
                 setStatus('error');
             }
-        } catch (error) {
+        } catch (err) {
+            console.error('Booking submit error:', err);
             setStatus('error');
         }
     };

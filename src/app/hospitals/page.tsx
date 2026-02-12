@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from '../hospitals.module.css';
@@ -11,6 +12,7 @@ import { CLINIC_CATEGORIES, INITIAL_CLINICS } from '@/data/clinics';
 // To persist, we'd need Supabase or local storage. For this demo, we just read.
 
 export default function HospitalsPage() {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState(CLINIC_CATEGORIES[0].id);
     const [clinics] = useState(INITIAL_CLINICS);
 
@@ -19,7 +21,15 @@ export default function HospitalsPage() {
 
     return (
         <div className={styles.container}>
-            <h1 className={styles.title}>韓国美容クリニック・病院</h1>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', justifyContent: 'center', position: 'relative' }}>
+                <button
+                    onClick={() => router.back()}
+                    style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', padding: '10px', position: 'absolute', left: 0 }}
+                >
+                    &larr;
+                </button>
+                <h1 className={styles.title} style={{ margin: 0 }}>韓国美容クリニック・病院</h1>
+            </div>
 
             {/* Category Tabs */}
             <div className={styles.tabs} style={{ overflowX: 'auto', flexWrap: 'nowrap' }}>

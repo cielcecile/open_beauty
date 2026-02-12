@@ -45,7 +45,8 @@ export default function ChatBot() {
 
             const data = await res.json();
             setMessages(prev => [...prev, { role: 'yuna', text: data.reply || '申し訳ありません。一時的なエラーが発生しました。' }]);
-        } catch (error) {
+        } catch (err) {
+            console.error('chat send error:', err);
             setMessages(prev => [...prev, { role: 'yuna', text: '通信エラーが発生しました。' }]);
         } finally {
             setIsLoading(false);

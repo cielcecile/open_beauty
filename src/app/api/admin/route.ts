@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // Mock DB for initial setup
-let hospitals = [
+const hospitals = [
     { id: 1, name: 'Lienjang Clinic (Gangnam)', location: 'Seoul, Gangnam-gu', status: 'Active' },
     { id: 2, name: 'AUREUM Signature', location: 'Seoul, Sinsa-dong', status: 'Active' }
 ];
@@ -22,7 +22,8 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: false, message: 'Invalid data type' }, { status: 400 });
 
-    } catch (error) {
+    } catch (err) {
+        console.error('admin POST error:', err);
         return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
     }
 }

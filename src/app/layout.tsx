@@ -9,21 +9,21 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Aureum | AIビューティー自己診断ソリューション",
-  description: "AIが分析するあなただけのオーダーメイドビューティーソリューション、Aureum（アウルム）。精密な分析で隠れた美しさを見つけましょう。",
-  keywords: ["AIビューティー", "自己診断", "肌分析", "パーソナルカラー", "ビューティーソリューション", "Aureum"],
-  authors: [{ name: "Aureum Team" }],
+  title: "AUREUM BEAUTY | AIビューティー自己診断ソリューション",
+  description: "AIが分析するあなただけのオーダーメイドビューティーソリューション、AUREUM BEAUTY。精密な分析で隠れた美しさを見つけましょう。",
+  keywords: ["AIビューティー", "自己診断", "肌分析", "パーソナルカラー", "ビューティーソリューション", "AUREUM BEAUTY"],
+  authors: [{ name: "AUREUM BEAUTY Team" }],
   openGraph: {
-    title: "Aureum | AIビューティー自己診断",
+    title: "AUREUM BEAUTY | AIビューティー自己診断",
     description: "AIが分析するあなただけのオーダーメイドビューティーソリューション",
     url: "https://open-beauty.vercel.app",
-    siteName: "Aureum",
+    siteName: "AUREUM BEAUTY",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Aureum AI Beauty Analysis",
+        alt: "AUREUM BEAUTY AI Beauty Analysis",
       },
     ],
     locale: "ja_JP",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aureum | AIビューティー自己診断",
+    title: "AUREUM BEAUTY | AIビューティー自己診断",
     description: "AIが分析するオーダーメイドビューティーソリューション",
     images: ["/og-image.jpg"],
   },
@@ -51,12 +51,8 @@ export const viewport: Viewport = {
 };
 
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
-import ChatBot from "@/components/ChatBot";
 
-import { ChatProvider } from "@/context/ChatContext";
+import ClientLayout from "@/components/ClientLayout";
 
 export default function RootLayout({
   children,
@@ -66,14 +62,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${notoSansJP.variable} flex-layout`}>
-        <ChatProvider>
-          <Header />
-          <main style={{ flex: 1, minHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', paddingBottom: '80px' }}>
-            {children}
-          </main>
-          <BottomNav />
-          <ChatBot />
-        </ChatProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

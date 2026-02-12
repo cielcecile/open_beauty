@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import styles from './packages.module.css';
 
 // Types
@@ -15,7 +17,15 @@ const CATEGORIES: { id: Category; label: string; icon: string }[] = [
     { id: 'WIFI', label: 'Wi-Fiレンタル', icon: '📡' },
 ];
 
-const AFFILIATE_LINKS: { [key in Category]: any[] } = {
+interface AffiliateItem {
+    title: string;
+    desc: string;
+    link: string;
+    image: string;
+    tag?: string;
+}
+
+const AFFILIATE_LINKS: Record<Category, AffiliateItem[]> = {
     FLIGHT: [
         {
             title: "Trip.com (トリップドットコム)",
@@ -92,17 +102,27 @@ const AFFILIATE_LINKS: { [key in Category]: any[] } = {
 };
 
 export default function PackagesPage() {
+    const router = useRouter();
     const [activeCategory, setActiveCategory] = useState<Category>('FLIGHT');
 
     return (
         <div className={styles.container}>
-            <motion.h1
-                className={styles.title}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-            >
-                ✈️ 韓国旅行 必須準備リスト
-            </motion.h1>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem', justifyContent: 'center', position: 'relative' }}>
+                <button
+                    onClick={() => router.back()}
+                    style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', padding: '10px', position: 'absolute', left: 0 }}
+                >
+                    &larr;
+                </button>
+                <motion.h1
+                    className={styles.title}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{ margin: 0 }}
+                >
+                    ✈️ 韓国旅行 必須準備リスト
+                </motion.h1>
+            </div>
 
             <motion.p
                 style={{ textAlign: 'center', marginBottom: '3rem', color: '#666' }}
@@ -146,7 +166,7 @@ export default function PackagesPage() {
                         transition={{ delay: idx * 0.1 }}
                     >
                         {item.tag && <div className={styles.rankBadge}>{item.tag}</div>}
-                        <img src={item.image} alt={item.title} className={styles.packageImage} />
+                        <Image src={item.image} alt={item.title} className={styles.packageImage} width={400} height={200} unoptimized />
                         <div className={styles.packageContent}>
                             <h3 className={styles.packageTitle}>{item.title}</h3>
                             <p className={styles.packageDesc}>{item.desc}</p>

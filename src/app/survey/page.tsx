@@ -67,7 +67,15 @@ function SurveyForm() {
 
     return (
         <div className={styles.container}>
-            <h1 className={styles.title}>ビューティー自己診断</h1>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <button
+                    onClick={() => router.back()}
+                    style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', padding: '10px' }}
+                >
+                    &larr;
+                </button>
+                <h1 className={styles.title} style={{ margin: 0, flex: 1, textAlign: 'center' }}>ビューティー自己診断</h1>
+            </div>
 
             {/* 1. Age Group */}
             <section className={styles.questionCard}>

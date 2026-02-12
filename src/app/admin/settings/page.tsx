@@ -5,9 +5,6 @@ import styles from '../admin.module.css';
 export default function AdminSettingsPage() {
     return (
         <div>
-            <header className={styles.header}>
-                <h1 className={styles.pageTitle}>設定 (Settings)</h1>
-            </header>
             <div className={styles.tableContainer}>
                 <div style={{ padding: '2rem' }}>
                     <div className={styles.card} style={{ marginBottom: '1rem' }}>

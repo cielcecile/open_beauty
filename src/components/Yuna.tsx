@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import styles from './yuna.module.css';
 
 interface YunaProps {
@@ -13,9 +12,24 @@ interface YunaProps {
 export default function Yuna({ message, sideImage }: YunaProps) {
     const [imageError, setImageError] = useState(false);
 
+
     return (
         <div className={styles.yunaWrapper}>
-            <div className={styles.topRow}><div className={`${styles.avatarFrame} ${styles.floating}`}>{!imageError ? (<img src="/images/yuna.png" alt="Yuna" className={styles.avatarImage} onError={() => setImageError(true)} />) : (<div className={styles.avatarFallback}>Yuna</div>)}</div>{sideImage && (<div className={styles.sideImageFrame}><img src={sideImage} alt="User" className={styles.sideImage} /><div className={styles.analyzedBadge}>Analyzed</div></div>)}</div>
+            <div className={styles.topRow}>
+                <div className={`${styles.avatarFrame} ${styles.floating}`}>
+                    {!imageError ? (
+                        <Image src="/images/yuna.png" alt="Yuna" width={72} height={72} className={styles.avatarImage} onError={() => setImageError(true)} unoptimized />
+                    ) : (
+                        <div className={styles.avatarFallback}>Yuna</div>
+                    )}
+                </div>
+                {sideImage && (
+                    <div className={styles.sideImageFrame}>
+                        <Image src={sideImage} alt="User" width={80} height={80} className={styles.sideImage} unoptimized />
+                        <div className={styles.analyzedBadge}>Analyzed</div>
+                    </div>
+                )}
+            </div>
 
             <div className={styles.speechBubble}>
                 <span className={styles.yunaName}>AI Counselor Yuna</span>
