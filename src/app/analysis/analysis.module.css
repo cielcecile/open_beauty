@@ -1,7 +1,12 @@
 .container {
+    width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 2rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
     font-family: var(--font-noto-sans-jp), sans-serif;
 }
 
@@ -88,12 +93,14 @@
 /* Result Styles */
 
 .resultArea {
+    width: 100%;
     margin-top: 2rem;
-    padding: 2rem;
+    padding: 2.5rem 1.5rem;
     background-color: white;
     border-radius: var(--radius-lg);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     animation: fadeIn 0.5s ease-out;
+    box-sizing: border-box;
 }
 
 .resultHeader {

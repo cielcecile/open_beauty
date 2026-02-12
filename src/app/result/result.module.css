@@ -1,7 +1,12 @@
 .container {
+    width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 2rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
     font-family: var(--font-noto-sans-jp), sans-serif;
     color: var(--c-text);
 }
@@ -15,13 +20,15 @@
 }
 
 .resultCard {
+    width: 100%;
     background-color: white;
-    padding: 2.5rem 2rem;
+    padding: 2.5rem 1.5rem;
     border-radius: var(--radius-lg);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .typeTag {
