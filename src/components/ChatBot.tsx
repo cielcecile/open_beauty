@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './ChatBot.module.css';
+import { useChat } from '@/context/ChatContext';
 
 interface Message {
     role: 'yuna' | 'user';
@@ -11,7 +12,7 @@ interface Message {
 }
 
 export default function ChatBot() {
-    const [isOpen, setIsOpen] = useState(false);
+    const { isOpen, closeChat } = useChat();
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([
         { role: 'yuna', text: 'こんにちは！アウルムの相談員ユナです。施術や価格について何か気になることはありますか？' }
@@ -19,11 +20,13 @@ export default function ChatBot() {
     const [isLoading, setIsLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
+    // Close when route changes (optional)
     useEffect(() => {
+        // Automatically scroll to bottom
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages, isLoading]);
+    }, [messages, isLoading, isOpen]); // Added isOpen to dependency
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -55,10 +58,11 @@ export default function ChatBot() {
                 {isOpen && (
                     <motion.div
                         className={styles.chatWindow}
-                        initial={{ opacity: 0, scale: 0.9, y: 20, transformOrigin: "bottom right" }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 50, x: '-50%' }}
+                        animate={{ opacity: 1, scale: 1, y: 0, x: '-50%' }}
+                        exit={{ opacity: 0, scale: 0.9, y: 50, x: '-50%' }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        style={{ bottom: '90px', right: 'auto', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '400px' }} // Center on mobile
                     >
                         <div className={styles.chatHeader}>
                             <div className={styles.yunaAvatarMini}>
@@ -68,7 +72,7 @@ export default function ChatBot() {
                                 <h4>AI相談員 ユナ</h4>
                                 <span>🟢 オンライン</span>
                             </div>
-                            <button onClick={() => setIsOpen(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
+                            <button onClick={closeChat} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
                         </div>
 
                         <div className={styles.messageList} ref={scrollRef}>
@@ -108,19 +112,6 @@ export default function ChatBot() {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            <motion.button
-                className={styles.chatButton}
-                onClick={() => setIsOpen(!isOpen)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-            >
-                {isOpen ? (
-                    <span style={{ color: 'white', fontSize: '1.5rem' }}>×</span>
-                ) : (
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                )}
-            </motion.button>
         </div>
     );
 }

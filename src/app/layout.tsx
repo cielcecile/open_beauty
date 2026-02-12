@@ -56,6 +56,8 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ChatBot from "@/components/ChatBot";
 
+import { ChatProvider } from "@/context/ChatContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -64,13 +66,14 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${notoSansJP.variable} flex-layout`}>
-        <Header />
-        <main style={{ flex: 1, minHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', paddingBottom: '80px' }}>
-          {children}
-        </main>
-        <BottomNav />
-        {/* <Footer /> Hide Footer for App-like feel, or keep at bottom of content if needed */}
-        <ChatBot />
+        <ChatProvider>
+          <Header />
+          <main style={{ flex: 1, minHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', paddingBottom: '80px' }}>
+            {children}
+          </main>
+          <BottomNav />
+          <ChatBot />
+        </ChatProvider>
       </body>
     </html>
   );

@@ -150,12 +150,16 @@
 }
 
 .sectionTitle {
-    font-size: 1.1rem;
+    font-size: 1.0rem;
+    /* Reduced from 1.1rem */
     font-weight: 700;
     margin-bottom: 1rem;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    /* Changed to flex-start for wrapping */
     gap: 0.5rem;
+    line-height: 1.5;
+    /* Added line-height */
 }
 
 .detailSection {

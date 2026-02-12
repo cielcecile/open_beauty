@@ -153,11 +153,27 @@ export default function AnalysisPage() {
 
                 <Yuna
                     message={`${analysisResult?.faceType}タイプですね！全体的に魅力的ですが、いくつかの数値を改善するとさらに美しくなります。`}
-                    sideImage={image}
                 />
 
+                {image && (
+                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                        <div style={{ display: 'inline-block', position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '3px solid #eee' }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={image} alt="Analyzed" style={{ width: '120px', height: '120px', objectFit: 'cover', display: 'block' }} />
+                            <div style={{ position: 'absolute', bottom: 0, right: 0, background: 'rgba(51,51,51,0.8)', color: 'white', fontSize: '0.6rem', padding: '2px 6px', borderTopLeftRadius: '6px' }}>Analyzed</div>
+                        </div>
+                    </div>
+                )}
+
                 <div className={styles.resultHeader}>
-                    <h3 className={styles.resultTitle} style={{ marginTop: '1.5rem' }}>{analysisResult?.faceType} - 総合ビューティーレポート</h3>
+                    <h3 className={styles.resultTitle} style={{ marginTop: '0.5rem' }}>
+                        <span style={{ display: 'block', fontSize: '1.8rem', marginBottom: '0.5rem', color: '#d4a373' }}>
+                            {analysisResult?.faceType}
+                        </span>
+                        <span style={{ display: 'block', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                            総合ビューティーレポート
+                        </span>
+                    </h3>
                     <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem' }}>※ 写真診断は撮影環境により誤差が生じる場合があります。</p>
                 </div>
 
