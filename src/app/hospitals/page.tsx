@@ -46,6 +46,7 @@ export default function HospitalsPage() {
                                     fill
                                     style={{ objectFit: 'cover' }}
                                     sizes="(max-width: 768px) 100vw, 500px" // Optimization
+                                    unoptimized // Bypass optimization to fix domain issues without restart/config
                                 />
                                 <div className={styles.rankBadge}>No. {clinic.rank}</div>
                             </div>

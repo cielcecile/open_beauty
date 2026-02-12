@@ -8,7 +8,8 @@ import { useChat } from '@/context/ChatContext';
 const NAV_ITEMS = [
     { label: 'ホーム', href: '/', icon: '🏠', type: 'link' },
     { label: 'AI分析', href: '/analysis', icon: '✨', type: 'link' },
-    { label: '準備', href: '/packages', icon: '✈️', type: 'link' },
+    { label: '病院', href: '/hospitals', icon: '🏥', type: 'link' },
+    { label: '旅行', href: '/packages', icon: '✈️', type: 'link' },
     { label: 'マイ', href: '/mypage', icon: '👤', type: 'link' },
     { label: 'AI相談', href: '#chat', icon: '💬', type: 'button' },
 ];
