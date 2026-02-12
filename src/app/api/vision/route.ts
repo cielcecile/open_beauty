@@ -10,19 +10,19 @@ export async function POST(req: Request) {
         if (!N8N_VISION_WEBHOOK) {
             // Mock Response for Development with Enhanced Features
             return NextResponse.json({
-                faceType: "우아한 고양이형",
+                faceType: "エレガントなキャットタイプ",
                 facialBalance: {
                     symmetryScore: 92,
-                    balanceStatus: "좌우 대칭이 매우 조화롭습니다. 특히 상안부와 하안부의 비율이 1:1.1로 한국인의 황금 비율에 근접해 있습니다.",
+                    balanceStatus: "左右の対称性が非常に調和しています。特に顔の上部と下部の比率が1:1.1で、黄金比に非常に近いです。",
                     goldenRatioMatch: "88%",
-                    advice: "현재 눈매가 매우 매력적입니다. 팔자 주름 부위에 미세하게 볼륨을 더한다면 더욱 입체적이고 화사한 인상이 완성될 거예요!"
+                    advice: "現在、目元が非常に魅力的です。ほうれい線の部位にわずかにボリュームを加えると、より立体的で華やかな印象が完成するでしょう！"
                 },
                 skinAge: {
                     actualAge: 32,
                     apparentAge: 28,
-                    condition: "피부결이 매끄럽고 광택이 우수합니다.",
-                    details: "피부 처짐은 거의 없으나, 눈가 주변의 미세한 건조함이 보입니다.",
-                    recommendation: "고주파 리프팅(올리지오) 또는 쥬베룩 스킨부스터로 현재의 광택을 유지하는 것을 권장합니다."
+                    condition: "肌のキメが滑らかで光沢が優れています。",
+                    details: "肌のたるみはほとんどありませんが、目元の周りに微細な乾燥が見られます。",
+                    recommendation: "高周波リフティング（オリジオ）またはジュベルックスキンブースターで、現在の光沢を維持することをお勧めします。"
                 }
             });
         }
@@ -43,7 +43,6 @@ export async function POST(req: Request) {
 
     } catch (error) {
         console.error('Vision API Error:', error);
-        return NextResponse.json({ error: '분석 중에 에러가 발생했습니다.' }, { status: 500 });
+        return NextResponse.json({ error: '分析中にエラーが発生しました。' }, { status: 500 });
     }
 }
-

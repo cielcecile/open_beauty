@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './survey.module.css';
 
 interface SurveyData {
@@ -20,12 +20,15 @@ const QUESTIONS = {
     downtime: ['全くなし', '2-3日可能', '1週間可能']
 };
 
-export default function SurveyPage() {
+function SurveyForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Auto-fill from Analysis
     const [data, setData] = useState<SurveyData>({
-        ageGroup: '',
+        ageGroup: searchParams.get('age') || '',
         skinType: '',
-        concerns: [],
+        concerns: searchParams.get('concerns') ? [searchParams.get('concerns')!] : [],
         budget: '',
         downtime: ''
     });
@@ -154,5 +157,15 @@ export default function SurveyPage() {
                 診断結果を見る
             </button>
         </div>
+    );
+}
+
+import { Suspense } from 'react';
+
+export default function SurveyPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <SurveyForm />
+        </Suspense>
     );
 }

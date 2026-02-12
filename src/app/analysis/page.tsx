@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import Yuna from '@/components/Yuna';
 import styles from './analysis.module.css';
 
@@ -38,7 +39,7 @@ export default function AnalysisPage() {
             setResult(data);
         } catch (error) {
             console.error('Analysis error:', error);
-            alert('분석 중 오류가 발생했습니다. 다시 시도해 주세요.');
+            alert('分析中にエラーが発生しました。もう一度試してください。');
         } finally {
             setIsAnalyzing(false);
         }
@@ -46,7 +47,7 @@ export default function AnalysisPage() {
 
     const shareToSns = (platform: string) => {
         const url = window.location.href;
-        const text = `Aureum AI 뷰티 진단 결과: 저는 '${result?.faceType}' 타입으로 분석되었어요!`;
+        const text = `Aureum AIビューティー診断結果：私は「${result?.faceType}」タイプと分析されました！`;
 
         switch (platform) {
             case 'line':
@@ -56,20 +57,20 @@ export default function AnalysisPage() {
                 window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
                 break;
             case 'instagram':
-                alert('이미지를 저장하여 인스타그램 스토리에 공유해보세요!');
+                alert('画像を保存してInstagramストーリーに共有してみましょう！');
                 break;
         }
     };
 
     return (
         <div className={styles.container}>
-            <h1 className={styles.title}>AI 정밀 사진 분석</h1>
+            <h1 className={styles.title}>AI精密写真分析</h1>
 
             {!image && (
                 <div className={styles.uploadBox} onClick={() => document.getElementById('file-input')?.click()}>
                     <span className={styles.icon}>📸</span>
-                    <p className={styles.uploadText}>분석할 사진 업로드</p>
-                    <p className={styles.hintText}>정면에서 밝은 조명 아래 촬영해 주세요</p>
+                    <p className={styles.uploadText}>分析する写真をアップロード</p>
+                    <p className={styles.hintText}>正面から明るい照明の下で撮影してください</p>
                     <input
                         id="file-input"
                         type="file"
@@ -84,13 +85,13 @@ export default function AnalysisPage() {
                 <div className={styles.previewContainer}>
                     <img src={image} alt="Preview" className={styles.previewImage} />
                     <button className={styles.analyzeBtn} onClick={startAnalysis}>
-                        AI 분석 시작하기
+                        AI分析を開始する
                     </button>
                     <button
                         onClick={() => setImage(null)}
                         style={{ background: 'none', border: 'none', marginTop: '1rem', color: '#888', cursor: 'pointer' }}
                     >
-                        사진 다시 찍기
+                        写真を撮り直す
                     </button>
                 </div>
             )}
@@ -98,73 +99,82 @@ export default function AnalysisPage() {
             {isAnalyzing && (
                 <div className={styles.loadingOverlay}>
                     <div className={styles.spinner}></div>
-                    <p>AI가 당신의 아름다움을 분석 중입니다...</p>
+                    <p>AIがあなたの美しさを分析しています...</p>
                 </div>
             )}
 
             {result && (
                 <div className={styles.resultArea}>
-                    <Yuna message={`분석이 완료되었습니다! ${result.faceType}인 당신, 정말 매력적이시네요!`} />
+                    <Yuna message={`分析が完了しました！${result.faceType}のあなた、とても魅力的ですね！`} />
 
                     <div className={styles.resultHeader}>
                         <span className={styles.faceTypeBadge}>{result.faceType}</span>
-                        <h2 className={styles.resultTitle}>당신만을 위한 뷰티 리포트</h2>
+                        <h2 className={styles.resultTitle}>あなただけのビューティーレポート</h2>
                     </div>
 
                     <div className={styles.scoreCardGrid}>
                         <div className={styles.scoreCard}>
                             <span className={styles.scoreValue}>{result.facialBalance?.symmetryScore}%</span>
-                            <span className={styles.scoreLabel}>얼굴 대칭 점수</span>
+                            <span className={styles.scoreLabel}>顔の対称スコア</span>
                         </div>
                         <div className={styles.scoreCard}>
                             <span className={styles.scoreValue}>{result.facialBalance?.goldenRatioMatch}</span>
-                            <span className={styles.scoreLabel}>황금비율 일치도</span>
+                            <span className={styles.scoreLabel}>黄金比の一致度</span>
                         </div>
                     </div>
 
                     <div className={styles.ageComparison}>
-                        <p className={styles.ageText}>평균 주름 및 탄력 기반</p>
+                        <p className={styles.ageText}>平均的なシワと弾力に基づく</p>
                         <p className={styles.ageText}>
-                            예상 피부 나이: <span className={styles.ageHighlight}>만 {result.skinAge?.apparentAge}세</span>
+                            予想肌年齢: <span className={styles.ageHighlight}>満 {result.skinAge?.apparentAge}歳</span>
                         </p>
-                        <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
-                            (실제 나이보다 {(result.skinAge?.actualAge || 0) - (result.skinAge?.apparentAge || 0)}살 더 어려 보여요!)
-                        </p>
+
                     </div>
 
                     <div className={styles.detailSection}>
-                        <h3 className={styles.sectionTitle}>⚖️ 밸런스 진단</h3>
+                        <h3 className={styles.sectionTitle}>⚖️ バランス診断</h3>
                         <div className={styles.adviceBox}>{result.facialBalance?.balanceStatus}</div>
                     </div>
 
                     <div className={styles.detailSection}>
-                        <h3 className={styles.sectionTitle}>✨ 전문가 코멘트</h3>
+                        <h3 className={styles.sectionTitle}>✨ 専門家コメント</h3>
                         <div className={styles.adviceBox}>{result.facialBalance?.advice}</div>
                     </div>
 
                     <div className={styles.detailSection}>
-                        <h3 className={styles.sectionTitle}>🏥 추천 시술 플랜</h3>
+                        <h3 className={styles.sectionTitle}>🏥 おすすめの施術プラン</h3>
                         <div className={styles.adviceBox}>{result.skinAge?.recommendation}</div>
                     </div>
 
                     <div className={styles.shareArea}>
-                        <p className={styles.shareTitle}>결과 공유하고 친구들과 비교해보기</p>
+                        <p className={styles.shareTitle}>結果を共有して友達と比較してみる</p>
                         <div className={styles.shareButtons}>
-                            <button className={styles.shareBtn} onClick={() => shareToSns('line')} title="라인">🟢</button>
-                            <button className={styles.shareBtn} onClick={() => shareToSns('instagram')} title="인스타그램">📸</button>
-                            <button className={styles.shareBtn} onClick={() => shareToSns('x')} title="X (트위터)">🐦</button>
+                            <button className={styles.shareBtn} onClick={() => shareToSns('line')} title="LINE">🟢</button>
+                            <button className={styles.shareBtn} onClick={() => shareToSns('instagram')} title="Instagram">📸</button>
+                            <button className={styles.shareBtn} onClick={() => shareToSns('x')} title="X (Twitter)">🐦</button>
                         </div>
                     </div>
 
                     <div className={styles.btnGroup}>
-                        <a href="/survey" className={styles.analyzeBtn} style={{ textDecoration: 'none', textAlign: 'center' }}>
-                            맞춤형 병원 추천받기
-                        </a>
+                        <Link
+                            href={{
+                                pathname: '/survey',
+                                query: {
+                                    analyzed: 'true',
+                                    age: result.skinAge?.apparentAge ? `${Math.floor(result.skinAge.apparentAge / 10) * 10}代` : undefined,
+                                    concerns: result.facialBalance?.advice.includes('ボリューム') ? 'たるみ/弾力 (Sagging)' : undefined
+                                }
+                            }}
+                            className={styles.analyzeBtn}
+                            style={{ textDecoration: 'none', textAlign: 'center' }}
+                        >
+                            自分に合ったクリニックのおすすめを受ける
+                        </Link>
                         <button
                             onClick={() => { setResult(null); setImage(null); }}
                             style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem', marginTop: '1rem' }}
                         >
-                            다시 분석하기
+                            もう一度分析する
                         </button>
                     </div>
                 </div>

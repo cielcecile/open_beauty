@@ -9,13 +9,13 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Aureum | AI 뷰티 자기진단 솔루션",
-  description: "AI가 분석하는 당신만의 맞춤형 뷰티 솔루션, Aureum(아울름). 정밀한 분석으로 숨겨진 아름다움을 찾아보세요.",
-  keywords: ["AI 뷰티", "자가진단", "피부 분석", "퍼스널 컬러", "뷰티 솔루션", "Aureum"],
+  title: "Aureum | AIビューティー自己診断ソリューション",
+  description: "AIが分析するあなただけのオーダーメイドビューティーソリューション、Aureum（アウルム）。精密な分析で隠れた美しさを見つけましょう。",
+  keywords: ["AIビューティー", "自己診断", "肌分析", "パーソナルカラー", "ビューティーソリューション", "Aureum"],
   authors: [{ name: "Aureum Team" }],
   openGraph: {
-    title: "Aureum | AI 뷰티 자기진단",
-    description: "AI가 분석하는 당신만의 맞춤형 뷰티 솔루션",
+    title: "Aureum | AIビューティー自己診断",
+    description: "AIが分析するあなただけのオーダーメイドビューティーソリューション",
     url: "https://open-beauty.vercel.app",
     siteName: "Aureum",
     images: [
@@ -26,20 +26,20 @@ export const metadata: Metadata = {
         alt: "Aureum AI Beauty Analysis",
       },
     ],
-    locale: "ko_KR",
+    locale: "ja_JP",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aureum | AI 뷰티 자기진단",
-    description: "AI가 분석하는 맞춤형 뷰티 솔루션",
+    title: "Aureum | AIビューティー自己診断",
+    description: "AIが分析するオーダーメイドビューティーソリューション",
     images: ["/og-image.jpg"],
   },
   other: {
-    "geo.region": "KR",
-    "geo.placename": "Seoul",
-    "geo.position": "37.5665;126.9780",
-    "ICBM": "37.5665, 126.9780",
+    "geo.region": "JP",
+    "geo.placename": "Tokyo",
+    "geo.position": "35.6895;139.6917",
+    "ICBM": "35.6895, 139.6917",
   }
 };
 
@@ -51,6 +51,8 @@ export const viewport: Viewport = {
 };
 
 
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
 
 export default function RootLayout({
@@ -60,8 +62,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${notoSansJP.variable}`}>
-        {children}
+      <body className={`${notoSansJP.variable} flex-layout`}>
+        <Header />
+        <main style={{ flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          {children}
+        </main>
+        <Footer />
         <ChatBot />
       </body>
     </html>

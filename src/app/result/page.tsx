@@ -130,6 +130,35 @@ function ResultContent() {
             </motion.div>
 
             <motion.div
+                className={styles.resultCard}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2, duration: 0.6 }}
+                style={{ marginTop: '1rem' }}
+            >
+                <h3 className={styles.treatmentName} style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>🏆 おすすめのクリニック</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    <div style={{ border: '1px solid #eee', padding: '1rem', borderRadius: '12px', background: '#fafafa' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>リエンジャン美容外科 (Lienjang)</span>
+                            <span style={{ fontSize: '0.8rem', color: '#ff6b6b', fontWeight: 600 }}>★ 4.8</span>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.4rem' }}>📍 ソウル江南・明洞・弘大</p>
+                        <p style={{ fontSize: '0.8rem', color: '#888' }}>外国人患者誘致医療機関 / 日本語通訳常駐</p>
+                    </div>
+
+                    <div style={{ border: '1px solid #eee', padding: '1rem', borderRadius: '12px', background: '#fafafa' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>アウルムクリニック (AUREUM)</span>
+                            <span style={{ fontSize: '0.8rem', color: '#ff6b6b', fontWeight: 600 }}>★ 4.9</span>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.4rem' }}>📍 ソウル新沙・狎鴎亭</p>
+                        <p style={{ fontSize: '0.8rem', color: '#888' }}>プレミアム1:1オーダーメイド施術 / プライベート個室</p>
+                    </div>
+                </div>
+            </motion.div>
+
+            <motion.div
                 className={styles.disclaimer}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

@@ -1,0 +1,25 @@
+.footer {
+    padding: 2rem 0;
+    text-align: center;
+    border-top: 1px solid #eee;
+    margin-top: auto;
+    background: #fdfdfd;
+}
+
+.links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.link {
+    font-size: 0.8rem;
+    color: #888;
+    text-decoration: none;
+}
+
+.copy {
+    font-size: 0.75rem;
+    color: #999;
+}
