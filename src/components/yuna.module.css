@@ -6,6 +6,14 @@
     animation: fadeIn 1s ease-out;
 }
 
+.topRow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 1.5rem;
+}
+
 .avatarFrame {
     width: 150px;
     height: 150px;
@@ -14,8 +22,38 @@
     border: 4px solid var(--c-main);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     background-color: white;
-    margin-bottom: 1.5rem;
     position: relative;
+    flex-shrink: 0;
+}
+
+.sideImageFrame {
+    width: 140px;
+    height: 180px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 4px solid white;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    background-color: white;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.sideImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.analyzedBadge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(255, 107, 107, 0.9);
+    color: white;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 700;
 }
 
 .avatarImage {

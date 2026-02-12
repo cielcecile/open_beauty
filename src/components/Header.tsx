@@ -10,7 +10,7 @@ export default function Header() {
             <nav className={styles.nav}>
                 <Link href="/" className={styles.navLink}>ホーム</Link>
                 <Link href="/analysis" className={styles.navLink}>AI分析</Link>
-                <Link href="/survey" className={styles.navLink}>自己診断</Link>
+                <Link href="/mypage" className={styles.navLink}>マイページ</Link>
             </nav>
         </header>
     );

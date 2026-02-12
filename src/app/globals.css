@@ -1,19 +1,25 @@
 :root {
-  /* Color Palette */
-  --c-base: #FDFCF0;      /* Warm Ivory */
-  --c-main: #E5D1C7;      /* Indie Beige */
-  --c-accent: #D4AF37;    /* Champagne Gold */
-  --c-text: #333333;      /* Charcoal Gray */
+  /* Original Warm Palette */
+  --c-base: #FDFCF0;
+  /* Warm Ivory - Background */
+  --c-main: #E5D1C7;
+  /* Indie Beige - Secondary/Cards */
+  --c-accent: #D4AF37;
+  /* Champagne Gold - Primary Action */
+  --c-text: #333333;
+  /* Charcoal Gray - Text (No Pure Black) */
   --c-white: #FFFFFF;
+
+  /* Status Colors */
+  --c-success: #6B8E23;
+  --c-danger: #CD5C5C;
+  /* Indian Red - Softer than bright red */
 
   /* Spacing & Layout */
   --radius-md: 12px;
   --radius-lg: 24px;
-  --spacing-base: 1rem;
-  
-  /* Safe Area for Mobile */
-  --safe-area-top: env(safe-area-inset-top);
-  --safe-area-bottom: env(safe-area-inset-bottom);
+
+  --font-main: var(--font-noto-sans-jp), sans-serif;
 }
 
 * {
@@ -32,54 +38,51 @@ body {
 body {
   color: var(--c-text);
   background: var(--c-base);
-  font-family: 'Noto Sans JP', sans-serif; /* Fallback, actual font loaded in layout */
+  font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+  transition: opacity 0.2s;
 }
 
-/* Utility Classes for Typography & Layout */
+a:hover {
+  opacity: 0.7;
+}
+
+/* Common Layout */
 .container {
   width: 100%;
-  max-width: 600px; /* Mobile focused max-width */
+  max-width: 800px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-.text-accent {
-  color: var(--c-accent);
-}
-
-.bg-main {
-  background-color: var(--c-main);
-}
-
-/* Button Component Base */
+/* Utility buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 24px;
-  border-radius: var(--radius-md);
+  padding: 1rem 2rem;
   font-weight: 700;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
+  transition: all 0.2s ease;
   border: none;
   font-size: 1rem;
 }
 
-.btn:active {
-  transform: scale(0.98);
-}
-
 .btn-primary {
   background-color: var(--c-accent);
-  color: var(--c-white);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #b89628;
+  /* Slightly darker gold */
 }
 
 .btn-secondary {
@@ -87,12 +90,6 @@ a {
   color: var(--c-text);
 }
 
-/* Animation Utilities */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.6s ease-out forwards;
+.text-accent {
+  color: var(--c-accent);
 }

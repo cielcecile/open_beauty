@@ -1,0 +1,221 @@
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    font-family: var(--font-main);
+    min-height: 80vh;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--c-text);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.profileCard {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 3rem;
+    border: 1px solid var(--c-main);
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #fdfdfd;
+    object-fit: cover;
+    border: 2px solid var(--c-accent);
+}
+
+.profileInfo h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--c-text);
+}
+
+.profileInfo p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.statsRow {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.statItem {
+    text-align: center;
+}
+
+.statValue {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--c-accent);
+    display: block;
+}
+
+.statLabel {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 2rem;
+    gap: 1.5rem;
+}
+
+.tab {
+    padding: 1rem 0.5rem;
+    font-weight: 700;
+    color: #999;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-size: 1rem;
+}
+
+.activeTab {
+    color: var(--c-accent);
+    border-bottom-color: var(--c-accent);
+}
+
+/* Sections */
+.sectionTitle {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--c-text);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    border-color: var(--c-accent);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.cardTitle {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--c-text);
+    margin-bottom: 0.3rem;
+}
+
+.cardSubtitle {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.tag {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #fdfdfd;
+    color: #666;
+    margin-right: 0.5rem;
+    border: 1px solid #eee;
+}
+
+.date {
+    font-size: 0.8rem;
+    color: #999;
+    display: block;
+    margin-top: 1rem;
+    text-align: right;
+    font-weight: 500;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 4rem;
+    color: #999;
+    background: #fbfbfb;
+    border-radius: 12px;
+    border: 1px dashed #ddd;
+}
+
+.button {
+    display: block;
+    width: 100%;
+    padding: 0.9rem;
+    margin-top: 1rem;
+    background: var(--c-accent);
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    transition: background 0.2s;
+}
+
+.button:hover {
+    background: #b89628;
+}
+
+.button-outline {
+    background: white;
+    color: var(--c-text);
+    border: 1px solid #ddd;
+}
+
+.button-outline:hover {
+    background: #f9f9f9;
+    border-color: #999;
+}
+
+.deleteBtn {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    padding: 0.2rem;
+}
+
+.deleteBtn:hover {
+    color: var(--c-danger);
+}
