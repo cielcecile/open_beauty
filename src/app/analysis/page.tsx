@@ -119,8 +119,40 @@ export default function AnalysisPage() {
     const handleDownloadImage = async () => {
         const element = document.getElementById('result-content');
         if (!element) return;
+
+        // Ensure the page is scrolled to top for accurate capture origin
+        window.scrollTo(0, 0);
+
         try {
-            const canvas = await html2canvas(element, { useCORS: true, scale: 2 });
+            const canvas = await html2canvas(element, {
+                useCORS: true,
+                scale: 2,
+                scrollX: 0,
+                scrollY: 0,
+                x: 0, // Force X origin to 0
+                y: 0, // Force Y origin to 0
+                backgroundColor: '#ffffff',
+                width: element.offsetWidth,
+                height: element.offsetHeight,
+                logging: false,
+                onclone: (clonedDoc) => {
+                    const clonedElement = clonedDoc.getElementById('result-content');
+                    if (clonedElement && element) {
+                        clonedElement.style.margin = '0 auto';
+                        clonedElement.style.padding = '40px 30px';
+                        clonedElement.style.width = '550px';
+                        clonedElement.style.display = 'block';
+
+                        clonedDoc.body.style.display = 'flex';
+                        clonedDoc.body.style.justifyContent = 'center';
+                        clonedDoc.body.classList.add('no-animation');
+
+                        // Remove any potential fixed/absolute elements that might overlap
+                        const fixedElements = clonedDoc.querySelectorAll('[style*="position: fixed"]');
+                        fixedElements.forEach(el => (el as HTMLElement).style.display = 'none');
+                    }
+                }
+            });
             const dataUrl = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.href = dataUrl;
@@ -145,7 +177,7 @@ export default function AnalysisPage() {
 
     const renderResult = () => (
         <div className={styles.container}>
-            <div id="result-content" className={styles.resultArea} style={{ marginTop: 0, padding: '1rem', background: '#fff' }}>
+            <div id="result-content" className={styles.resultArea} style={{ marginTop: 0, background: '#fff' }}>
                 {/* Header */}
                 <h2 style={{ textAlign: 'center', fontSize: '1.4rem', marginBottom: '1.5rem', color: '#333' }}>
                     あなたは <span style={{ color: '#d4a373', fontSize: '1.6rem', borderBottom: '2px solid #d4a373' }}>{analysisResult?.faceType || 'ナチュラル'}</span> タイプのお顔です！
@@ -178,7 +210,7 @@ export default function AnalysisPage() {
                 </div>
 
                 {/* Radar Chart */}
-                <div style={{ margin: '1rem 0', height: '300px', position: 'relative' }}>
+                <div style={{ margin: '1rem auto', height: '300px', width: '100%', maxWidth: '500px', position: 'relative' }}>
                     <Radar
                         data={{
                             labels: ['水分', '弾力', '毛穴', '色素', 'シワ'],
