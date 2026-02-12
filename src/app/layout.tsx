@@ -53,6 +53,7 @@ export const viewport: Viewport = {
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import ChatBot from "@/components/ChatBot";
 
 export default function RootLayout({
@@ -64,10 +65,11 @@ export default function RootLayout({
     <html lang="ja">
       <body className={`${notoSansJP.variable} flex-layout`}>
         <Header />
-        <main style={{ flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <main style={{ flex: 1, minHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', paddingBottom: '80px' }}>
           {children}
         </main>
-        <Footer />
+        <BottomNav />
+        {/* <Footer /> Hide Footer for App-like feel, or keep at bottom of content if needed */}
         <ChatBot />
       </body>
     </html>
