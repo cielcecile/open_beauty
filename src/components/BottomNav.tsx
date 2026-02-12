@@ -9,8 +9,8 @@ const NAV_ITEMS = [
     { label: 'ホーム', href: '/', icon: '🏠', type: 'link' },
     { label: 'AI分析', href: '/analysis', icon: '✨', type: 'link' },
     { label: '準備', href: '/packages', icon: '✈️', type: 'link' },
-    { label: 'AI相談', href: '#chat', icon: '💬', type: 'button' },
     { label: 'マイ', href: '/mypage', icon: '👤', type: 'link' },
+    { label: 'AI相談', href: '#chat', icon: '💬', type: 'button' },
 ];
 
 export default function BottomNav() {
