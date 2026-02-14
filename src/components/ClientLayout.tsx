@@ -17,7 +17,7 @@ export default function ClientLayout({
     const isAdminPage = pathname?.startsWith('/admin');
     const isHospitalDetail = pathname ? /^\/hospitals\/[^/]+$/.test(pathname) : false;
     // 설문·진단·결과 페이지: 몰입 모드 (Header/Footer/BottomNav 숨김)
-    const isImmersive = ['/analysis', '/survey', '/result'].some(p => pathname?.startsWith(p));
+    const isImmersive = ['/survey', '/result'].some(p => pathname?.startsWith(p));
     const showChrome = !isAdminPage && !isImmersive;
 
     return (
