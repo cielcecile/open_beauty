@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signInWithProvider = useCallback(async (provider: 'google' | 'kakao') => {
         await supabase.auth.signInWithOAuth({
             provider,
-            options: { redirectTo: `${window.location.origin}` }
+            options: { redirectTo: window.location.href }
         });
     }, []);
 
