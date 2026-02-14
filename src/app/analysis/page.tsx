@@ -52,6 +52,42 @@ const CLINICS = [
     { id: 2, name: 'リエンジャン美容外科', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧' }
 ];
 
+// Mock History Data for Initial Demo (Matching MyPage)
+// ID 1: Elegant Cat, SkinAge 25, Score 85
+// ID 2: Natural, SkinAge 27, Score 72
+const MOCK_HISTORY = [
+    {
+        id: 1,
+        date: '2026-02-12',
+        faceType: 'エレガントキャット',
+        skinAge: { apparentAge: 25 },
+        scores: [90, 85, 80, 85, 85], // High scores
+        surveyData: {
+            ageGroup: '20代',
+            skinType: '混合肌 (Combi)',
+            concerns: ['水分不足', '毛穴'],
+            budget: '標準 (30~100万ウォン)',
+            downtime: '2-3日可能'
+        },
+        analysisResult: { faceType: 'エレガントキャット', skinAge: { apparentAge: 25 } }
+    },
+    {
+        id: 2,
+        date: '2025-11-20',
+        faceType: 'ナチュラル',
+        skinAge: { apparentAge: 27 },
+        scores: [70, 75, 70, 75, 70], // Average scores
+        surveyData: {
+            ageGroup: '20代',
+            skinType: '乾燥肌 (Dry)',
+            concerns: ['毛穴目立ち', 'くすみ'],
+            budget: '標準 (30~100万ウォン)',
+            downtime: '1週間可能'
+        },
+        analysisResult: { faceType: 'ナチュラル', skinAge: { apparentAge: 27 } }
+    }
+];
+
 export default function AnalysisPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -72,7 +108,12 @@ export default function AnalysisPage() {
         const id = searchParams.get('id');
         if (id) {
             const savedHistory = JSON.parse(localStorage.getItem('analysis_history') || '[]');
-            const report = savedHistory.find((item: any) => item.id === Number(id));
+            let report = savedHistory.find((item: any) => item.id === Number(id));
+
+            // Fallback to Mock Data if not found in localStorage
+            if (!report) {
+                report = MOCK_HISTORY.find((item: any) => item.id === Number(id));
+            }
 
             if (report) {
                 setAnalysisResult(report.analysisResult);
