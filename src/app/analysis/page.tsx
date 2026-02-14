@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Radar } from 'react-chartjs-2';
@@ -36,7 +36,7 @@ ChartJS.register(
 const SURVEY_QUESTIONS = {
     ageGroup: ['20代', '30代', '40代', '50代以上'],
     skinType: ['乾燥肌 (Dry)', '脂性肌 (Oily)', '混合肌 (Combi)', '敏感肌 (Sensitive)'],
-    concerns: ['たるみ/弾力', 'シワ', '毛穴/傷跡', 'シミ/肝斑', 'ニキビ'],
+    concerns: ['たるみ/弾力', 'シワ', '毛穴/傷跡', 'シミ/肝斑', 'ニキ비'],
     budget: ['実用重視 (<30万ウォン)', '標準 (30~100万ウォン)', 'プレミアム (100万ウォン+)'],
     downtime: ['全くなし', '2-3日可能', '1週間可能']
 };
@@ -46,23 +46,21 @@ const TREATMENTS_DESC: { [key: string]: string } = {
     'たるみ/弾力': 'オリジオ (Oligio): 強力な高周波で即時的なリフトアップ効果\nシュリンクユニバース: 超音波でフェイスラインを引き締め',
     'シワ': 'ボトックス: 表情ジワの改善\nフィラー: 深いシワのボリューム改善',
     '毛穴/傷跡': 'ジュベルック: コラーゲン生成を促進し毛穴を縮小\nポテンツァ: マイクロニードルで肌質改善',
-    'シミ/肝斑': 'ピコトーニング: シミを薄くし肌のトーンアップ\n美白点滴: 体の内側から輝く肌へ',
+    'シミ/肝斑': 'ピコトーニング: シミ을薄くし肌のトーンアップ\n美白点滴: 体の内側から輝く肌へ',
     'ニキビ': 'アグネス: 繰り返すニキビの根源を破壊\nPDT治療: 皮脂分泌を抑制'
 };
 
 const CLINICS = [
     { id: 'd1', name: 'アウルムクリニック', rating: 4.9, desc: 'ソウル大出身、プレミアム1:1管理', location: '江南・新沙', tags: ['リフトアップ', '肌管理'] },
-    { id: 'p1', name: 'リエンジャン美容外科', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧', location: '江南・駅三', tags: ['ボトックス', 'フィラー'] }
+    { id: 'p1', name: '리엔장성형외과', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧', location: '江南・駅三', tags: ['ボトックス', 'フィラー'] }
 ];
 
 // Mock History Data for Initial Demo (Matching MyPage)
-// ID 1: Elegant Cat, SkinAge 25, Score 85
-// ID 2: Natural, SkinAge 27, Score 72
 const MOCK_HISTORY = [
     {
         id: 1,
         date: '2026-02-12',
-        faceType: 'エレガントキャット',
+        faceType: '엘레강트 캣',
         skinAge: { apparentAge: 25 },
         scores: [90, 85, 80, 85, 85], // High scores
         surveyData: {
@@ -77,7 +75,7 @@ const MOCK_HISTORY = [
     {
         id: 2,
         date: '2025-11-20',
-        faceType: 'ナチュラル',
+        faceType: '내추럴',
         skinAge: { apparentAge: 27 },
         scores: [70, 75, 70, 75, 70], // Average scores
         surveyData: {
@@ -92,6 +90,14 @@ const MOCK_HISTORY = [
 ];
 
 export default function AnalysisPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>読み込み中...</div>}>
+            <AnalysisContent />
+        </Suspense>
+    );
+}
+
+function AnalysisContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user } = useAuth(); // Auth context
@@ -222,18 +228,18 @@ export default function AnalysisPage() {
                 if (data) {
                     setAnalysisResult({ faceType: data.face_type, skinAge: { apparentAge: data.skin_age } });
                     setScores(data.scores);
-                    
+
                     // survey_data が文字列の場合はパース、そうでなければそのまま使用
-                    const surveyDataProcessed = typeof data.survey_data === 'string' 
-                        ? JSON.parse(data.survey_data) 
+                    const surveyDataProcessed = typeof data.survey_data === 'string'
+                        ? JSON.parse(data.survey_data)
                         : data.survey_data;
-                    
-                    // concerns がない場合は空配列にセット
+
+                    // concerns 가 없으면 빈 배열로 세팅
                     const processedData = {
                         ...surveyDataProcessed,
                         concerns: surveyDataProcessed?.concerns || []
                     };
-                    
+
                     setSurveyData(processedData);
                     if (data.image_url) setImage(data.image_url);
                     setStep('RESULT');
@@ -282,12 +288,9 @@ export default function AnalysisPage() {
         fetchTreatments();
     }, []);
 
-    // ... (rest of logic)
-
-    // Save to Wishlist
     const handleAddToWishlist = async (clinic: any) => {
         if (!user) {
-            alert('ログインが必要です。');
+            alert('로그인이 필요합니다.');
             return;
         }
 
@@ -300,10 +303,10 @@ export default function AnalysisPage() {
 
         if (error) {
             if (error.code === '23505') { // Unique violation
-                alert('既に保存されています。');
+                alert('이미 저장되었습니다.');
             } else {
                 console.error('Error saving wishlist:', error);
-                alert('保存に失敗しました。');
+                alert('저장에 실패했습니다.');
             }
             return;
         }
@@ -315,13 +318,12 @@ export default function AnalysisPage() {
     const renderResult = () => (
         <div className={styles.container}>
             <div id="result-content" className={styles.resultArea} style={{ marginTop: 0, background: '#fff' }}>
-                {/* Header */}
                 <h2 style={{ textAlign: 'center', fontSize: '1.4rem', marginBottom: '1.5rem', color: '#333' }}>
-                    あなたは <span style={{ color: '#d4a373', fontSize: '1.6rem', borderBottom: '2px solid #d4a373' }}>{analysisResult?.faceType || 'ナチュラル'}</span> タイプのお顔です！
+                    あなたは <span style={{ color: '#d4a373', fontSize: '1.6rem', borderBottom: '2px solid #d4a373' }}>{analysisResult?.faceType || 'ナチュラル'}</span> タイプのお顔입니다!
                 </h2>
 
                 <Yuna
-                    message={`${analysisResult?.faceType}タイプですね！全体的に魅力的ですが、いくつかの数値を改善するとさらに美しくなります。`}
+                    message={`${analysisResult?.faceType}タイプですね！全体적으로 魅力的ですが、いくつかの数値を改善するとさらに美しくなります。`}
                 />
 
                 {image && (
@@ -345,7 +347,6 @@ export default function AnalysisPage() {
                     <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem' }}>※ 写真診断は撮影環境により誤差が生じる場合があります。</p>
                 </div>
 
-                {/* Radar Chart */}
                 <div style={{ margin: '1rem auto', height: '300px', width: '100%', maxWidth: '500px', position: 'relative' }}>
                     <Radar
                         data={{
@@ -364,7 +365,6 @@ export default function AnalysisPage() {
                     />
                 </div>
 
-                {/* Score Table */}
                 <div style={{ background: '#fcfcfc', padding: '1rem', borderRadius: '8px', border: '1px solid #eee', marginBottom: '2rem' }}>
                     <h4 style={{ textAlign: 'center', marginBottom: '1rem', fontSize: '0.95rem' }}>📊 肌ステータス詳細</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', fontSize: '0.9rem' }}>
@@ -379,7 +379,6 @@ export default function AnalysisPage() {
                     </div>
                 </div>
 
-                {/* Treatments */}
                 <div className={styles.detailSection} style={{ background: '#fffaf0', border: '1px solid #eddcd2' }}>
                     <h3 className={styles.sectionTitle} style={{ color: '#d4a373' }}>💉 おすすめの施術ソリューション</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -430,12 +429,11 @@ export default function AnalysisPage() {
                                 </div>
                             );
                         }) : (
-                            <p>特に悩みがない場合でも、定期的な肌管理（アクアピーリングなど）がおすすめです。</p>
+                            <p>특히 고민이 없으셔도 주기적인 아쿠아필링 등 피부 관리를 추천합니다.</p>
                         )}
                     </div>
                 </div>
 
-                {/* Clinics with Heart Button */}
                 <div className={styles.detailSection}>
                     <h3 className={styles.sectionTitle}>🏆 施術におすすめの病院</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
@@ -461,13 +459,11 @@ export default function AnalysisPage() {
                 </div>
             </div>
 
-            {/* Action Buttons */}
             <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                {/* 1. Save Report - Main Button */}
                 <button
                     onClick={async () => {
                         if (!user) {
-                            alert('ログインが必要です。');
+                            alert('로그인이 필요합니다.');
                             return;
                         }
 
@@ -479,7 +475,6 @@ export default function AnalysisPage() {
                             survey_data: surveyData,
                         };
 
-                        // 既存のレポートを削除して最新版のみ保存
                         const { error: deleteError } = await supabase
                             .from('analysis_results')
                             .delete()
@@ -495,7 +490,7 @@ export default function AnalysisPage() {
 
                         if (insertError) {
                             console.error('Error saving report:', insertError);
-                            alert('レポートの保存に失敗しました。');
+                            alert('레포트 저장에 실패했습니다.');
                         } else {
                             setShowSaveModal(true);
                         }
@@ -513,19 +508,10 @@ export default function AnalysisPage() {
                         transition: 'all 0.2s',
                         boxShadow: '0 4px 15px rgba(126, 58, 242, 0.3)'
                     }}
-                    onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(126, 58, 242, 0.4)';
-                    }}
-                    onMouseOut={(e) => {
-                        e.currentTarget.style.transform = '';
-                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(126, 58, 242, 0.3)';
-                    }}
                 >
                     <span style={{ fontSize: '1.4rem', marginRight: '0.5rem' }}>💾</span>レポート保存
                 </button>
 
-                {/* 2. Save Image - Text Link */}
                 <button
                     onClick={handleDownloadImage}
                     style={{
@@ -536,11 +522,8 @@ export default function AnalysisPage() {
                         fontSize: '0.95rem',
                         fontWeight: '600',
                         textDecoration: 'none',
-                        padding: '0.5rem',
-                        transition: 'opacity 0.2s'
+                        padding: '0.5rem'
                     }}
-                    onMouseOver={(e) => { e.currentTarget.style.opacity = '0.7'; }}
-                    onMouseOut={(e) => { e.currentTarget.style.opacity = '1'; }}
                 >
                     📥 画像として保存
                 </button>
@@ -548,7 +531,6 @@ export default function AnalysisPage() {
         </div>
     );
 
-    // Re-implement Renderers for previous steps to keep file consistent
     const renderEntry = () => (
         <div className={styles.container}>
             <h1 className={styles.title}>AI総合ビューティー診断</h1>
@@ -608,7 +590,6 @@ export default function AnalysisPage() {
             </div>
             {image && <Image src={image} alt="uploaded" width={60} height={60} style={{ borderRadius: '50%', objectFit: 'cover', margin: '0 auto 1.5rem auto', display: 'block', border: '2px solid #d4a373' }} unoptimized />}
             <div className={styles.surveyContainer}>
-                {/* Survey content same as before ... */}
                 <div style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>1. 年齢層</label>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>{SURVEY_QUESTIONS.ageGroup.map(opt => (<button key={opt} onClick={() => handleSurveySelect('ageGroup', opt)} style={{ padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid #ddd', background: surveyData.ageGroup === opt ? '#333' : 'white', color: surveyData.ageGroup === opt ? 'white' : '#333' }}>{opt}</button>))}</div>
@@ -646,7 +627,6 @@ export default function AnalysisPage() {
         </div>
     );
 
-    // Save Success Modal Component
     const SaveSuccessModal = () => (
         <div style={{
             position: 'fixed',
@@ -667,8 +647,7 @@ export default function AnalysisPage() {
                 textAlign: 'center',
                 maxWidth: '90%',
                 width: '320px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                animation: 'fadeIn 0.2s ease-out'
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
             }} onClick={e => e.stopPropagation()}>
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💾</div>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: '#333' }}>保存完了</h3>
@@ -706,7 +685,6 @@ export default function AnalysisPage() {
         </div>
     );
 
-    // Clinic Save Success Modal
     const ClinicSaveModal = () => (
         <div style={{
             position: 'fixed',
@@ -723,8 +701,7 @@ export default function AnalysisPage() {
             display: 'flex',
             flexDirection: 'column',
             gap: '0.5rem',
-            zIndex: 2000,
-            animation: 'slideDown 0.3s ease-out'
+            zIndex: 2000
         }} onClick={() => setShowClinicModal(false)}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                 <span style={{ fontSize: '1.5rem' }}>💖</span>
@@ -743,12 +720,6 @@ export default function AnalysisPage() {
                     閉じる
                 </button>
             </div>
-            <style jsx>{`
-                @keyframes slideDown {
-                    from { transform: translate(-50%, -20px); opacity: 0; }
-                    to { transform: translate(-50%, 0); opacity: 1; }
-                }
-            `}</style>
         </div>
     );
 
