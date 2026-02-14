@@ -338,7 +338,8 @@ export default function AnalysisPage() {
 
                         const existing = JSON.parse(localStorage.getItem('analysis_history') || '[]');
                         localStorage.setItem('analysis_history', JSON.stringify([newReport, ...existing]));
-                        alert('レポートを保存しました！マイページで確認できます。');
+                        // alert('レポートを保存しました！マイページで確認できます。');
+                        setShowSaveModal(true);
                     }}
                     style={{
                         padding: '0.8rem 0.2rem',
@@ -507,6 +508,69 @@ export default function AnalysisPage() {
         </div>
     );
 
+    // Modal State
+    const [showSaveModal, setShowSaveModal] = useState(false);
+
+    // Save Success Modal Component
+    const SaveSuccessModal = () => (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+        }} onClick={() => setShowSaveModal(false)}>
+            <div style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '16px',
+                textAlign: 'center',
+                maxWidth: '90%',
+                width: '320px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                animation: 'fadeIn 0.2s ease-out'
+            }} onClick={e => e.stopPropagation()}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💾</div>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: '#333' }}>保存完了</h3>
+                <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                    診断レポートが保存されました。<br />
+                    マイページでいつでも確認できます。
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    <Link href="/mypage" style={{
+                        display: 'block',
+                        padding: '0.8rem',
+                        background: '#333',
+                        color: 'white',
+                        textDecoration: 'none',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem'
+                    }}>
+                        マイページへ移動
+                    </Link>
+                    <button onClick={() => setShowSaveModal(false)} style={{
+                        padding: '0.8rem',
+                        background: '#f0f0f0',
+                        color: '#666',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontSize: '0.95rem'
+                    }}>
+                        閉じる
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <>
             {step === 'ENTRY' && renderEntry()}
@@ -514,6 +578,7 @@ export default function AnalysisPage() {
             {step === 'SURVEY' && renderSurvey()}
             {step === 'ANALYZING' && renderLoading()}
             {step === 'RESULT' && renderResult()}
+            {showSaveModal && <SaveSuccessModal />}
         </>
     );
 }
