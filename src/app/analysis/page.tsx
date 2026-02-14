@@ -48,8 +48,8 @@ const TREATMENTS_DESC: { [key: string]: string } = {
 };
 
 const CLINICS = [
-    { id: 1, name: 'アウルムクリニック', rating: 4.9, desc: 'ソウル大出身、プレミアム1:1管理' },
-    { id: 2, name: 'リエンジャン美容外科', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧' }
+    { id: 1, name: 'アウルムクリニック', rating: 4.9, desc: 'ソウル大出身、プレミアム1:1管理', location: '江南・新沙', tags: ['リフトアップ', '肌管理'] },
+    { id: 2, name: 'リエンジャン美容外科', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧', location: '江南・駅三', tags: ['ボトックス', 'フィラー'] }
 ];
 
 // Mock History Data for Initial Demo (Matching MyPage)
@@ -142,6 +142,11 @@ export default function AnalysisPage() {
 
     // Mock Scores
     const [scores, setScores] = useState([0, 0, 0, 0, 0]);
+
+    // Modal State
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [showClinicModal, setShowClinicModal] = useState(false);
+    const [savedClinicName, setSavedClinicName] = useState('');
 
     // Handlers
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,10 +243,18 @@ export default function AnalysisPage() {
         }
     };
 
-    // Save to Wishlist (Mock)
-    const handleAddToWishlist = (clinicName: string) => {
-        // Needs integration with store/context
-        alert(`「${clinicName}」をマイ病院リストに保存しました💖\nマイページで確認できます！`);
+    // Save to Wishlist
+    const handleAddToWishlist = (clinic: any) => {
+        const savedClinics = JSON.parse(localStorage.getItem('saved_clinics') || '[]');
+
+        // Check for duplicates
+        if (!savedClinics.some((c: any) => c.id === clinic.id)) {
+            const newClinic = { ...clinic, date: new Date().toLocaleDateString() };
+            localStorage.setItem('saved_clinics', JSON.stringify([newClinic, ...savedClinics]));
+        }
+
+        setSavedClinicName(clinic.name);
+        setShowClinicModal(true);
     };
 
     // --- Renderers ---
@@ -347,7 +360,7 @@ export default function AnalysisPage() {
                                     <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem' }}>{clinic.desc}</p>
                                 </div>
                                 <button
-                                    onClick={() => handleAddToWishlist(clinic.name)}
+                                    onClick={() => handleAddToWishlist(clinic)}
                                     style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ff6b6b' }}
                                     title="マイ病院リストに保存"
                                 >
@@ -508,7 +521,7 @@ export default function AnalysisPage() {
                 >
                     &larr;
                 </button>
-                <h1 className={styles.title} style={{ margin: 0, flex: 1, textAlign: 'center' }}>写真アップロード</h1>
+                <h1 className={styles.title} style={{ margin: 0, flex: 1, textAlign: 'center', fontSize: '1.4rem' }}>写真アップロード</h1>
             </div>
             <div className={styles.uploadBox} onClick={() => document.getElementById('file-input')?.click()}>
                 <span className={styles.icon}>📸</span>
@@ -570,9 +583,6 @@ export default function AnalysisPage() {
         </div>
     );
 
-    // Modal State
-    const [showSaveModal, setShowSaveModal] = useState(false);
-
     // Save Success Modal Component
     const SaveSuccessModal = () => (
         <div style={{
@@ -633,6 +643,52 @@ export default function AnalysisPage() {
         </div>
     );
 
+    // Clinic Save Success Modal
+    const ClinicSaveModal = () => (
+        <div style={{
+            position: 'fixed',
+            top: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '90%',
+            maxWidth: '400px',
+            backgroundColor: '#333',
+            color: 'white',
+            padding: '1rem 1.5rem',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem',
+            zIndex: 2000,
+            animation: 'slideDown 0.3s ease-out'
+        }} onClick={() => setShowClinicModal(false)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <span style={{ fontSize: '1.5rem' }}>💖</span>
+                <div>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 'bold' }}>保存しました！</h4>
+                    <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>
+                        「{savedClinicName}」をマイ病院リストに追加しました。
+                    </p>
+                </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '0.5rem' }}>
+                <Link href="/mypage" style={{ color: '#d4a373', fontSize: '0.85rem', fontWeight: 'bold', textDecoration: 'none' }}>
+                    確認する &rarr;
+                </Link>
+                <button onClick={(e) => { e.stopPropagation(); setShowClinicModal(false); }} style={{ background: 'none', border: 'none', color: 'white', fontSize: '0.85rem', cursor: 'pointer', opacity: 0.7 }}>
+                    閉じる
+                </button>
+            </div>
+            <style jsx>{`
+                @keyframes slideDown {
+                    from { transform: translate(-50%, -20px); opacity: 0; }
+                    to { transform: translate(-50%, 0); opacity: 1; }
+                }
+            `}</style>
+        </div>
+    );
+
     return (
         <>
             {step === 'ENTRY' && renderEntry()}
@@ -641,7 +697,7 @@ export default function AnalysisPage() {
             {step === 'ANALYZING' && renderLoading()}
             {step === 'RESULT' && renderResult()}
             {showSaveModal && <SaveSuccessModal />}
+            {showClinicModal && <ClinicSaveModal />}
         </>
     );
 }
-

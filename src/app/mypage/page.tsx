@@ -34,10 +34,20 @@ export default function MyPage() {
     const [subTab, setSubTab] = useState<'HISTORY' | 'WISHLIST' | 'RESERVATIONS'>('HISTORY');
     const [history, setHistory] = useState<any[]>(DIAGNOSIS_HISTORY);
 
+    const [savedClinics, setSavedClinics] = useState<any[]>(SAVED_CLINICS);
+
     useEffect(() => {
         const saved = localStorage.getItem('analysis_history');
         if (saved) {
             setHistory(JSON.parse(saved));
+        }
+
+        const savedClinicsData = localStorage.getItem('saved_clinics');
+        if (savedClinicsData) {
+            // Merge saved clinics with default ones, avoiding duplicates by ID if necessary
+            // For simplicity in this demo, we'll prepend them
+            const parsed = JSON.parse(savedClinicsData);
+            setSavedClinics([...parsed, ...SAVED_CLINICS.filter(d => !parsed.some((p: any) => p.id === d.id))]);
         }
     }, []);
 
@@ -162,16 +172,24 @@ export default function MyPage() {
                     <div>
                         <h3 className={styles.sectionTitle}>🏥 保存した病院</h3>
                         <div className={styles.grid} style={{ marginBottom: '2rem' }}>
-                            {SAVED_CLINICS.map(clinic => (
+                            {savedClinics.map(clinic => (
                                 <div key={clinic.id} className={styles.card}>
                                     <div className={styles.cardHeader}>
                                         <span style={{ color: 'var(--c-danger)', fontWeight: 'bold' }}>★ {clinic.rating}</span>
-                                        <button className={styles.deleteBtn}>×</button>
+                                        <button className={styles.deleteBtn} onClick={() => {
+                                            const newSaved = savedClinics.filter(c => c.id !== clinic.id);
+                                            setSavedClinics(newSaved);
+
+                                            // Update localStorage if it was a user-saved clinic
+                                            const localData = JSON.parse(localStorage.getItem('saved_clinics') || '[]');
+                                            const newLocal = localData.filter((c: any) => c.id !== clinic.id);
+                                            localStorage.setItem('saved_clinics', JSON.stringify(newLocal));
+                                        }}>×</button>
                                     </div>
                                     <h3 className={styles.cardTitle}>{clinic.name}</h3>
                                     <p className={styles.cardSubtitle}>📍 {clinic.location}</p>
                                     <div style={{ marginBottom: '1rem' }}>
-                                        {clinic.tags.map(t => <span key={t} className={styles.tag}>{t}</span>)}
+                                        {clinic.tags && clinic.tags.map((t: string) => <span key={t} className={styles.tag}>{t}</span>)}
                                     </div>
                                     <button className={styles.button}>予約相談する</button>
                                 </div>
