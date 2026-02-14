@@ -54,6 +54,18 @@ export default function Header() {
                                     <div style={{ padding: '0.7rem 1rem', fontSize: '0.8rem', color: '#888', borderBottom: '1px solid #f0f0f0' }}>
                                         {user.email}
                                     </div>
+                                    <Link
+                                        href="/mypage"
+                                        onClick={() => setShowMenu(false)}
+                                        style={{
+                                            display: 'block', width: '100%', textAlign: 'left',
+                                            padding: '0.7rem 1rem', textDecoration: 'none',
+                                            cursor: 'pointer', fontSize: '0.9rem', color: '#333',
+                                            borderBottom: '1px solid #f0f0f0'
+                                        }}
+                                    >
+                                        マイページ
+                                    </Link>
                                     <button
                                         onClick={() => { signOut(); setShowMenu(false); }}
                                         style={{

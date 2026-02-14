@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './BottomNav.module.css';
 import { useChat } from '@/context/ChatContext';
+import { useAuth } from '@/context/AuthContext';
 
 const NAV_ITEMS = [
     { label: 'ホーム', href: '/', icon: '🏠', type: 'link' },
@@ -17,10 +18,16 @@ const NAV_ITEMS = [
 export default function BottomNav() {
     const pathname = usePathname();
     const { toggleChat, isOpen } = useChat();
+    const { user } = useAuth();
+
+    const visibleItems = NAV_ITEMS.filter(item => {
+        if (item.href === '/mypage' && !user) return false;
+        return true;
+    });
 
     return (
         <nav className={styles.bottomNav}>
-            {NAV_ITEMS.map((item) => {
+            {visibleItems.map((item) => {
                 if (item.type === 'button') {
                     return (
                         <button

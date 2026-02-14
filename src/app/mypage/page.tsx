@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import styles from './mypage.module.css';
 
 // Mock Data
@@ -27,7 +28,18 @@ const RESERVATIONS = [
 ];
 
 export default function MyPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
     const [subTab, setSubTab] = useState<'HISTORY' | 'WISHLIST' | 'RESERVATIONS'>('HISTORY');
+
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/');
+        }
+    }, [user, loading, router]);
+
+    if (loading) return <div className={styles.container}>Loading...</div>;
+    if (!user) return null;
 
     return (
         <div className={styles.container}>
@@ -38,10 +50,29 @@ export default function MyPage() {
                 animate={{ opacity: 1, y: 0 }}
             >
                 <div style={{ position: 'relative' }}>
-                    <Image src="/yuki_profile.png" className={styles.avatar} alt="Profile" width={96} height={96} unoptimized />
+                    <div style={{
+                        width: '96px',
+                        height: '96px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #D4AF37, #b89628)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '2.5rem',
+                        fontWeight: 'bold',
+                        margin: '0 auto 1rem'
+                    }}>
+                        {(user.email?.[0] || 'U').toUpperCase()}
+                    </div>
                 </div>
                 <div className={styles.profileInfo}>
-                    <h2>Yuki Tanaka <span style={{ fontSize: '0.9rem', color: 'var(--c-accent)', fontWeight: 'normal' }}>@yuki_beauty</span></h2>
+                    <h2>
+                        {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                        <span style={{ fontSize: '0.9rem', color: 'var(--c-accent)', fontWeight: 'normal', display: 'block', marginTop: '0.2rem' }}>
+                            {user.email}
+                        </span>
+                    </h2>
                     <p>美容に関心が高い20代後半、乾燥肌タイプ</p>
                     <div className={styles.statsRow}>
                         <div className={styles.statItem}>
