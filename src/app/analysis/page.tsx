@@ -299,13 +299,13 @@ export default function AnalysisPage() {
 
             {/* Action Buttons */}
             {/* Action Buttons */}
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem', justifyContent: 'space-between' }}>
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.6rem', justifyContent: 'space-between' }}>
                 {/* Save Image (Left) */}
                 <button
                     onClick={handleDownloadImage}
                     style={{
                         flex: 1,
-                        padding: '1rem',
+                        padding: '1rem 0.5rem',
                         background: 'white',
                         color: '#333',
                         border: '1px solid #ddd',
@@ -315,8 +315,9 @@ export default function AnalysisPage() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '0.5rem',
-                        fontSize: '0.9rem'
+                        gap: '0.3rem',
+                        fontSize: '0.85rem',
+                        whiteSpace: 'nowrap'
                     }}
                 >
                     <span>📥</span> 画像として保存
@@ -340,7 +341,7 @@ export default function AnalysisPage() {
                     }}
                     style={{
                         flex: 1,
-                        padding: '1rem',
+                        padding: '1rem 0.5rem',
                         background: '#333',
                         color: 'white',
                         border: 'none',
@@ -350,8 +351,9 @@ export default function AnalysisPage() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '0.5rem',
-                        fontSize: '0.9rem'
+                        gap: '0.3rem',
+                        fontSize: '0.85rem',
+                        whiteSpace: 'nowrap'
                     }}
                 >
                     <span>💾</span> レポートを保存
