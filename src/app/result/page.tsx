@@ -1,12 +1,14 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Yuna from '@/components/Yuna';
 import BookingModal from '@/components/BookingModal';
 import LoginModal from '@/components/LoginModal';
+import TreatmentModal from '@/components/TreatmentModal';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import styles from './result.module.css';
 
 interface Treatment {
@@ -61,6 +63,10 @@ function ResultContent() {
     const [isBookingOpen, setIsBookingOpen] = useState(false);
     const [showLogin, setShowLogin] = useState(false);
     const { user, loading: authLoading } = useAuth();
+    const [isSaved, setIsSaved] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showTreatmentModal, setShowTreatmentModal] = useState(false);
+    const [selectedTreatment, setSelectedTreatment] = useState<any>(null);
 
     const getRecommendation = (): Treatment => {
         if (concerns.some(c => c.includes('Sagging') || c.includes('たるみ'))) return TREATMENTS_DATABASE.sagging;
@@ -72,6 +78,90 @@ function ResultContent() {
 
     const result = getRecommendation();
     const isLoggedIn = !authLoading && !!user;
+
+    // 저장된 시술 확인
+    const checkIfSaved = async () => {
+        if (!isLoggedIn) return;
+        try {
+            const { data, error } = await supabase
+                .from('saved_treatments')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('treatment_name', result.name)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error checking saved status:', error);
+                return;
+            }
+            
+            setIsSaved(!!data);
+        } catch (err) {
+            console.error('Unexpected error:', err);
+        }
+    };
+
+    // useEffect로 로그인 시 저장 여부 확인
+    useEffect(() => {
+        if (isLoggedIn) {
+            checkIfSaved();
+        }
+    }, [isLoggedIn, result.name, user?.id]);
+
+    // 시술 저장/해제 함수
+    const handleSaveTreatment = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!isLoggedIn) {
+            setShowLogin(true);
+            return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            if (isSaved) {
+                // 저장된 항목 삭제
+                const { error } = await supabase
+                    .from('saved_treatments')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('treatment_name', result.name);
+
+                if (error) {
+                    console.error('Error removing treatment:', error);
+                    alert('削除に失敗しました。');
+                    return;
+                }
+                setIsSaved(false);
+            } else {
+                // 새로운 시술 저장
+                const { error } = await supabase
+                    .from('saved_treatments')
+                    .insert({
+                        user_id: user.id,
+                        treatment_name: result.name,
+                        treatment_desc: result.desc,
+                        treatment_price: result.price,
+                        treatment_time: result.time,
+                        treatment_downtime: result.downtime,
+                    });
+
+                if (error) {
+                    console.error('Error saving treatment:', error);
+                    alert('保存に失敗しました。');
+                    return;
+                }
+                setIsSaved(true);
+            }
+        } catch (err) {
+            console.error('Unexpected error:', err);
+            alert('エラーが発生しました。');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <motion.div
@@ -94,7 +184,34 @@ function ResultContent() {
                 transition={{ delay: 1, duration: 0.6 }}
             >
                 <span className={styles.typeTag}>#GlassSkin_Wannabe</span>
-                <h2 className={styles.treatmentName}>{result.name}</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                    <h2 className={styles.treatmentName}>{result.name}</h2>
+                    <button
+                        onClick={() => {
+                            setSelectedTreatment({
+                                name: result.name,
+                                description: result.desc,
+                                price: result.price,
+                                time: result.time,
+                                downtime: result.downtime,
+                            });
+                            setShowTreatmentModal(true);
+                        }}
+                        disabled={isSaving}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: isSaving ? 'not-allowed' : 'pointer',
+                            fontSize: '1.8rem',
+                            opacity: isSaving ? 0.5 : 1,
+                            transition: 'all 0.2s',
+                            lineHeight: 1,
+                        }}
+                        title={isSaved ? '保存済み' : '関心施術を見る'}
+                    >
+                        {isSaved ? '❤️' : '🤍'}
+                    </button>
+                </div>
                 <p className={styles.description}>{result.desc}</p>
             </motion.div>
 
@@ -336,6 +453,12 @@ function ResultContent() {
                     <BookingModal
                         onClose={() => setIsBookingOpen(false)}
                         treatmentName={result.name}
+                    />
+                )}
+                {showTreatmentModal && selectedTreatment && (
+                    <TreatmentModal
+                        treatment={selectedTreatment}
+                        onClose={() => setShowTreatmentModal(false)}
                     />
                 )}
             </AnimatePresence>

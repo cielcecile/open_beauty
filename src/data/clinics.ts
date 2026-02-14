@@ -1,9 +1,9 @@
 
 export const CLINIC_CATEGORIES = [
-    { id: 'DERMATOLOGY', label: '皮膚科', name: '피부과' },
-    { id: 'PLASTIC', label: '美容外科', name: '성형외과' },
-    { id: 'DENTISTRY', label: '歯科', name: '치과' },
-    { id: 'ORIENTAL', label: '韓医院', name: '한의원' },
+    { id: 'DERMATOLOGY', label: '皮膚科' },
+    { id: 'PLASTIC', label: '美容外科' },
+    { id: 'DENTISTRY', label: '歯科' },
+    { id: 'ORIENTAL', label: '韓医院' },
 ];
 
 export interface Clinic {

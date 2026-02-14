@@ -15,8 +15,11 @@ import {
 } from 'chart.js';
 import html2canvas from 'html2canvas';
 
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 import Yuna from '@/components/Yuna';
+import TreatmentModal from '@/components/TreatmentModal';
 import styles from './analysis.module.css';
 
 // Chart Registration
@@ -48,8 +51,8 @@ const TREATMENTS_DESC: { [key: string]: string } = {
 };
 
 const CLINICS = [
-    { id: 1, name: 'アウルムクリニック', rating: 4.9, desc: 'ソウル大出身、プレミアム1:1管理', location: '江南・新沙', tags: ['リフトアップ', '肌管理'] },
-    { id: 2, name: 'リエンジャン美容外科', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧', location: '江南・駅三', tags: ['ボトックス', 'フィラー'] }
+    { id: 'd1', name: 'アウルムクリニック', rating: 4.9, desc: 'ソウル大出身、プレミアム1:1管理', location: '江南・新沙', tags: ['リフトアップ', '肌管理'] },
+    { id: 'p1', name: 'リエンジャン美容外科', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧', location: '江南・駅三', tags: ['ボトックス', 'フィラー'] }
 ];
 
 // Mock History Data for Initial Demo (Matching MyPage)
@@ -91,10 +94,9 @@ const MOCK_HISTORY = [
 export default function AnalysisPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [step, setStep] = useState<'ENTRY' | 'UPLOAD' | 'SURVEY' | 'ANALYZING' | 'RESULT'>('ENTRY');
+    const { user } = useAuth(); // Auth context
 
-    // State
-    const [image, setImage] = useState<string | null>(null);
+    type Step = 'ENTRY' | 'UPLOAD' | 'SURVEY' | 'ANALYZING' | 'RESULT';
     type SurveyData = {
         ageGroup: string;
         skinType: string;
@@ -103,34 +105,9 @@ export default function AnalysisPage() {
         downtime: string;
     };
 
-    // Load saved report if ID is present
-    useEffect(() => {
-        const id = searchParams.get('id');
-        if (id) {
-            const savedHistory = JSON.parse(localStorage.getItem('analysis_history') || '[]');
-            let report = savedHistory.find((item: any) => item.id === Number(id));
-
-            // Fallback to Mock Data if not found in localStorage
-            if (!report) {
-                report = MOCK_HISTORY.find((item: any) => item.id === Number(id));
-            }
-
-            if (report) {
-                setAnalysisResult(report.analysisResult);
-                setScores(report.scores);
-                setSurveyData(report.surveyData);
-                // Note: Image might not be saved or might be heavy. 
-                // If we want to save image, we need to handle base64 storage carefully.
-                // For now, we assume image is not persisted or handled separately.
-                if (report.image) setImage(report.image);
-
-                setStep('RESULT');
-            }
-        }
-    }, [searchParams]);
-
+    const [step, setStep] = useState<Step>('ENTRY');
+    const [image, setImage] = useState<string | null>(null);
     type AnalysisResult = { faceType: string; skinAge?: { apparentAge: number } } | null;
-
     const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(null);
     const [surveyData, setSurveyData] = useState<SurveyData>({
         ageGroup: '',
@@ -139,14 +116,13 @@ export default function AnalysisPage() {
         budget: '',
         downtime: ''
     });
-
-    // Mock Scores
     const [scores, setScores] = useState([0, 0, 0, 0, 0]);
-
-    // Modal State
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [showClinicModal, setShowClinicModal] = useState(false);
     const [savedClinicName, setSavedClinicName] = useState('');
+    const [treatments, setTreatments] = useState<any[]>([]);
+    const [showTreatmentModal, setShowTreatmentModal] = useState(false);
+    const [selectedTreatment, setSelectedTreatment] = useState<any>(null);
 
     // Handlers
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,7 +156,8 @@ export default function AnalysisPage() {
 
     const startComprehensiveAnalysis = async () => {
         setStep('ANALYZING');
-        // Logic remains same...
+
+        // Mock Analysis Logic
         const baseScores = [85, 80, 75, 80, 85];
         if (surveyData.concerns.includes('たるみ/弾力')) baseScores[1] -= 20;
         if (surveyData.concerns.includes('毛穴/傷跡')) baseScores[2] -= 25;
@@ -194,12 +171,10 @@ export default function AnalysisPage() {
         }, 2500);
     };
 
-    // Save as Image
     const handleDownloadImage = async () => {
         const element = document.getElementById('result-content');
         if (!element) return;
 
-        // Ensure the page is scrolled to top for accurate capture origin
         window.scrollTo(0, 0);
 
         try {
@@ -208,8 +183,6 @@ export default function AnalysisPage() {
                 scale: 2,
                 scrollX: 0,
                 scrollY: 0,
-                x: 0, // Force X origin to 0
-                y: 0, // Force Y origin to 0
                 backgroundColor: '#ffffff',
                 width: element.offsetWidth,
                 height: element.offsetHeight,
@@ -221,14 +194,6 @@ export default function AnalysisPage() {
                         clonedElement.style.padding = '40px 30px';
                         clonedElement.style.width = '550px';
                         clonedElement.style.display = 'block';
-
-                        clonedDoc.body.style.display = 'flex';
-                        clonedDoc.body.style.justifyContent = 'center';
-                        clonedDoc.body.classList.add('no-animation');
-
-                        // Remove any potential fixed/absolute elements that might overlap
-                        const fixedElements = clonedDoc.querySelectorAll('[style*="position: fixed"]');
-                        fixedElements.forEach(el => (el as HTMLElement).style.display = 'none');
                     }
                 }
             });
@@ -242,25 +207,110 @@ export default function AnalysisPage() {
             alert('画像の保存に失敗しました。');
         }
     };
+    // Load saved report if ID is present
+    useEffect(() => {
+        const id = searchParams.get('id');
+        if (id) {
+            const fetchReport = async () => {
+                // Try fetching from Supabase first
+                const { data, error } = await supabase
+                    .from('analysis_results')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (data) {
+                    setAnalysisResult({ faceType: data.face_type, skinAge: { apparentAge: data.skin_age } });
+                    setScores(data.scores);
+                    
+                    // survey_data が文字列の場合はパース、そうでなければそのまま使用
+                    const surveyDataProcessed = typeof data.survey_data === 'string' 
+                        ? JSON.parse(data.survey_data) 
+                        : data.survey_data;
+                    
+                    // concerns がない場合は空配列にセット
+                    const processedData = {
+                        ...surveyDataProcessed,
+                        concerns: surveyDataProcessed?.concerns || []
+                    };
+                    
+                    setSurveyData(processedData);
+                    if (data.image_url) setImage(data.image_url);
+                    setStep('RESULT');
+                } else {
+                    // Fallback to local/mock if not found in DB (e.g. legacy data)
+                    const savedHistory = JSON.parse(localStorage.getItem('analysis_history') || '[]');
+                    let report = savedHistory.find((item: any) => item.id === Number(id));
+                    if (!report) {
+                        report = MOCK_HISTORY.find((item: any) => item.id === Number(id));
+                    }
+                    if (report) {
+                        setAnalysisResult(report.analysisResult);
+                        setScores(report.scores);
+                        setSurveyData(report.surveyData);
+                        if (report.image) setImage(report.image);
+                        setStep('RESULT');
+                    }
+                }
+            };
+            fetchReport();
+        }
+    }, [searchParams]);
+
+    // Load treatments from Supabase
+    useEffect(() => {
+        const fetchTreatments = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('treatments')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+
+                if (error) {
+                    console.error('Error fetching treatments:', error);
+                    return;
+                }
+
+                if (data) {
+                    setTreatments(data);
+                }
+            } catch (err) {
+                console.error('Unexpected error:', err);
+            }
+        };
+
+        fetchTreatments();
+    }, []);
+
+    // ... (rest of logic)
 
     // Save to Wishlist
-    const handleAddToWishlist = (clinic: any) => {
-        const savedClinics = JSON.parse(localStorage.getItem('saved_clinics') || '[]');
+    const handleAddToWishlist = async (clinic: any) => {
+        if (!user) {
+            alert('ログインが必要です。');
+            return;
+        }
 
-        // Check for duplicates
-        if (!savedClinics.some((c: any) => c.id === clinic.id)) {
-            const newClinic = { ...clinic, date: new Date().toLocaleDateString() };
-            localStorage.setItem('saved_clinics', JSON.stringify([newClinic, ...savedClinics]));
+        const { error } = await supabase
+            .from('wishlist_clinics')
+            .insert({
+                user_id: user.id,
+                hospital_id: clinic.id
+            });
+
+        if (error) {
+            if (error.code === '23505') { // Unique violation
+                alert('既に保存されています。');
+            } else {
+                console.error('Error saving wishlist:', error);
+                alert('保存に失敗しました。');
+            }
+            return;
         }
 
         setSavedClinicName(clinic.name);
         setShowClinicModal(true);
     };
-
-    // --- Renderers ---
-    // (Entry, Upload, Survey, Loading remain largely similar but using updated CSS classes implicitly via module)
-
-    // Simplified for brevity, focusing on RESULT changes
 
     const renderResult = () => (
         <div className={styles.container}>
@@ -333,14 +383,53 @@ export default function AnalysisPage() {
                 <div className={styles.detailSection} style={{ background: '#fffaf0', border: '1px solid #eddcd2' }}>
                     <h3 className={styles.sectionTitle} style={{ color: '#d4a373' }}>💉 おすすめの施術ソリューション</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {surveyData?.concerns?.length > 0 ? surveyData.concerns.map(c => (
-                            <div key={c} style={{ background: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                                <strong style={{ color: '#e53e3e', fontSize: '0.9rem', display: 'block', marginBottom: '0.3rem' }}>悩み: {c}</strong>
-                                <p style={{ fontSize: '0.85rem', whiteSpace: 'pre-line', color: '#555', lineHeight: 1.6 }}>
-                                    {TREATMENTS_DESC[c] || '専門医との相談をおすすめします。'}
-                                </p>
-                            </div>
-                        )) : (
+                        {surveyData?.concerns?.length > 0 ? surveyData.concerns.map(c => {
+                            const matchingTreatments = treatments.filter(t => t.concern_type === c);
+                            return (
+                                <div key={c}>
+                                    <strong style={{ color: '#e53e3e', fontSize: '0.9rem', display: 'block', marginBottom: '0.8rem' }}>悩み: {c}</strong>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                        {matchingTreatments.length > 0 ? matchingTreatments.map(treatment => (
+                                            <div key={treatment.id} style={{ background: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                                    <strong style={{ color: '#333', fontSize: '0.95rem' }}>{treatment.name}</strong>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedTreatment(treatment);
+                                                            setShowTreatmentModal(true);
+                                                        }}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            fontSize: '1.5rem',
+                                                            lineHeight: 1,
+                                                            padding: 0,
+                                                            transition: 'transform 0.2s'
+                                                        }}
+                                                        title="関心施術を見る"
+                                                    >
+                                                        🤍
+                                                    </button>
+                                                </div>
+                                                <p style={{ fontSize: '0.85rem', color: '#555', lineHeight: 1.6, margin: '0.5rem 0' }}>
+                                                    {treatment.description}
+                                                </p>
+                                                {(treatment.price || treatment.time || treatment.downtime) && (
+                                                    <div style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem', borderTop: '1px solid #eee', paddingTop: '0.5rem' }}>
+                                                        {treatment.price && <span>💰 {treatment.price} </span>}
+                                                        {treatment.time && <span>⏱ {treatment.time} </span>}
+                                                        {treatment.downtime && <span>✨ {treatment.downtime}</span>}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )) : (
+                                            <p style={{ fontSize: '0.85rem', color: '#999' }}>専門医との相談をおすすめします。</p>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        }) : (
                             <p>特に悩みがない場合でも、定期的な肌管理（アクアピーリングなど）がおすすめです。</p>
                         )}
                     </div>
@@ -373,113 +462,87 @@ export default function AnalysisPage() {
             </div>
 
             {/* Action Buttons */}
-            {/* Action Buttons Grid */}
-            <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem' }}>
+            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                {/* 1. Save Report - Main Button */}
+                <button
+                    onClick={async () => {
+                        if (!user) {
+                            alert('ログインが必要です。');
+                            return;
+                        }
 
-                {/* 1. Save Image */}
+                        const newReport = {
+                            user_id: user.id,
+                            face_type: analysisResult?.faceType || 'ナチュラル',
+                            skin_age: analysisResult?.skinAge?.apparentAge || 25,
+                            scores: scores,
+                            survey_data: surveyData,
+                        };
+
+                        // 既存のレポートを削除して最新版のみ保存
+                        const { error: deleteError } = await supabase
+                            .from('analysis_results')
+                            .delete()
+                            .eq('user_id', user.id);
+
+                        if (deleteError) {
+                            console.error('Error deleting old report:', deleteError);
+                        }
+
+                        const { error: insertError } = await supabase
+                            .from('analysis_results')
+                            .insert(newReport);
+
+                        if (insertError) {
+                            console.error('Error saving report:', insertError);
+                            alert('レポートの保存に失敗しました。');
+                        } else {
+                            setShowSaveModal(true);
+                        }
+                    }}
+                    className={styles.primaryButton}
+                    style={{
+                        padding: '1.2rem 2rem',
+                        background: 'linear-gradient(135deg, #7e3af2, #6c2bd9)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontWeight: '700',
+                        fontSize: '1.1rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 4px 15px rgba(126, 58, 242, 0.3)'
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(126, 58, 242, 0.4)';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.transform = '';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(126, 58, 242, 0.3)';
+                    }}
+                >
+                    <span style={{ fontSize: '1.4rem', marginRight: '0.5rem' }}>💾</span>レポート保存
+                </button>
+
+                {/* 2. Save Image - Text Link */}
                 <button
                     onClick={handleDownloadImage}
                     style={{
-                        padding: '0.8rem 0.2rem',
-                        background: 'white',
-                        color: '#333',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px',
+                        background: 'none',
+                        border: 'none',
+                        color: '#7e3af2',
                         cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.3rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold'
+                        fontSize: '0.95rem',
+                        fontWeight: '600',
+                        textDecoration: 'none',
+                        padding: '0.5rem',
+                        transition: 'opacity 0.2s'
                     }}
+                    onMouseOver={(e) => { e.currentTarget.style.opacity = '0.7'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.opacity = '1'; }}
                 >
-                    <span style={{ fontSize: '1.2rem' }}>📥</span>
-                    <span>画像保存</span>
-                </button>
-
-                {/* 2. Save Report */}
-                <button
-                    onClick={() => {
-                        const newReport = {
-                            id: Date.now(),
-                            date: new Date().toLocaleDateString(),
-                            faceType: analysisResult?.faceType || 'ナチュラル',
-                            skinAge: analysisResult?.skinAge?.apparentAge || 25,
-                            highlight: surveyData.concerns[0] || 'なし',
-                            score: scores.reduce((a, b) => a + b, 0) / scores.length
-                        };
-
-                        const existing = JSON.parse(localStorage.getItem('analysis_history') || '[]');
-                        localStorage.setItem('analysis_history', JSON.stringify([newReport, ...existing]));
-                        // alert('レポートを保存しました！マイページで確認できます。');
-                        setShowSaveModal(true);
-                    }}
-                    style={{
-                        padding: '0.8rem 0.2rem',
-                        background: 'white',
-                        color: '#333',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.3rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    <span style={{ fontSize: '1.2rem' }}>💾</span>
-                    <span>レポート保存</span>
-                </button>
-
-                {/* 3. Travel Plan */}
-                <Link href="/packages" style={{
-                    padding: '0.8rem 0.2rem',
-                    background: 'white',
-                    color: '#333',
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.3rem',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold'
-                }}>
-                    <span style={{ fontSize: '1.2rem' }}>✈️</span>
-                    <span>旅行プラン</span>
-                </Link>
-
-                {/* 4. My Page */}
-                <Link href="/mypage" style={{
-                    padding: '0.8rem 0.2rem',
-                    background: 'white',
-                    color: '#333',
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.3rem',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold'
-                }}>
-                    <span style={{ fontSize: '1.2rem' }}>👤</span>
-                    <span>マイページ</span>
-                </Link>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                <button onClick={() => { setStep('ENTRY'); setImage(null); }} style={{ background: 'none', border: 'none', color: '#888', textDecoration: 'underline' }}>
-                    ホームに戻る
+                    📥 画像として保存
                 </button>
             </div>
         </div>
@@ -698,6 +761,12 @@ export default function AnalysisPage() {
             {step === 'RESULT' && renderResult()}
             {showSaveModal && <SaveSuccessModal />}
             {showClinicModal && <ClinicSaveModal />}
+            {showTreatmentModal && selectedTreatment && (
+                <TreatmentModal
+                    treatment={selectedTreatment}
+                    onClose={() => setShowTreatmentModal(false)}
+                />
+            )}
         </>
     );
 }

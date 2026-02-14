@@ -1,9 +1,13 @@
-'use client';
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { Inter } from 'next/font/google';
 import styles from './admin.module.css';
+
+const inter = Inter({
+    subsets: ['latin'],
+    variable: '--font-inter',
+});
 
 export default function AdminLayout({
     children,
@@ -13,7 +17,7 @@ export default function AdminLayout({
     const pathname = usePathname();
 
     return (
-        <div className={styles.adminContainer}>
+        <div className={`${styles.adminContainer} ${inter.variable}`}>
             {/* Sidebar Navigation */}
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarTitle}>
@@ -32,6 +36,11 @@ export default function AdminLayout({
                                 登録病院管理
                             </li>
                         </Link>
+                        <Link href="/admin/treatments" style={{ textDecoration: 'none' }}>
+                            <li className={`${styles.navItem} ${pathname === '/admin/treatments' ? styles.navItemActive : ''}`}>
+                                施術管理
+                            </li>
+                        </Link>
                         <Link href="/admin/settings" style={{ textDecoration: 'none' }}>
                             <li className={`${styles.navItem} ${pathname === '/admin/settings' ? styles.navItemActive : ''}`}>
                                 設定
@@ -47,6 +56,7 @@ export default function AdminLayout({
                     <div className={styles.headerTitle}>
                         {pathname === '/admin' && 'ダッシュボード'}
                         {pathname === '/admin/hospitals' && '登録病院管理'}
+                        {pathname === '/admin/treatments' && '施術管理'}
                         {pathname === '/admin/settings' && '設定'}
                     </div>
                     <div className={styles.userInfo} style={{ marginLeft: 'auto' }}>
