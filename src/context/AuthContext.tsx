@@ -50,10 +50,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: null };
     }, []);
 
+    const getURL = () => {
+        let url =
+            process?.env?.NEXT_PUBLIC_SITE_URL ?? // Custom base URL
+            process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set on Vercel
+            'http://localhost:3000/';
+        // Make sure to include `https://` when not localhost
+        url = url.includes('http') ? url : `https://${url}`;
+        // Make sure to include a trailing slash
+        url = url.charAt(url.length - 1) === '/' ? url : `${url}/`;
+        return url;
+    };
+
     const signInWithProvider = useCallback(async (provider: 'google' | 'kakao') => {
         await supabase.auth.signInWithOAuth({
             provider,
-            options: { redirectTo: window.location.href }
+            options: { redirectTo: getURL() }
         });
     }, []);
 
