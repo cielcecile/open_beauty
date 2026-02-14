@@ -57,26 +57,26 @@ export default function AnalysisPage() {
     const router = useRouter();
     const [step, setStep] = useState<'ENTRY' | 'UPLOAD' | 'SURVEY' | 'ANALYZING' | 'RESULT'>('ENTRY');
 
-        // State
-        const [image, setImage] = useState<string | null>(null);
-        type SurveyData = {
-            ageGroup: string;
-            skinType: string;
-            concerns: string[];
-            budget: string;
-            downtime: string;
-        };
+    // State
+    const [image, setImage] = useState<string | null>(null);
+    type SurveyData = {
+        ageGroup: string;
+        skinType: string;
+        concerns: string[];
+        budget: string;
+        downtime: string;
+    };
 
-        type AnalysisResult = { faceType: string; skinAge?: { apparentAge: number } } | null;
+    type AnalysisResult = { faceType: string; skinAge?: { apparentAge: number } } | null;
 
-        const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(null);
-        const [surveyData, setSurveyData] = useState<SurveyData>({
-            ageGroup: '',
-            skinType: '',
-            concerns: [],
-            budget: '',
-            downtime: ''
-        });
+    const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(null);
+    const [surveyData, setSurveyData] = useState<SurveyData>({
+        ageGroup: '',
+        skinType: '',
+        concerns: [],
+        budget: '',
+        downtime: ''
+    });
 
     // Mock Scores
     const [scores, setScores] = useState([0, 0, 0, 0, 0]);
@@ -298,14 +298,64 @@ export default function AnalysisPage() {
             </div>
 
             {/* Action Buttons */}
-            <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Action Buttons */}
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <button
-                    onClick={handleDownloadImage}
-                    style={{ width: '100%', padding: '1rem', background: '#333', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                    onClick={() => {
+                        const newReport = {
+                            id: Date.now(),
+                            date: new Date().toLocaleDateString(),
+                            faceType: analysisResult?.faceType || 'ナチュラル',
+                            skinAge: analysisResult?.skinAge?.apparentAge || 25,
+                            highlight: surveyData.concerns[0] || 'なし',
+                            score: scores.reduce((a, b) => a + b, 0) / scores.length
+                        };
+
+                        const existing = JSON.parse(localStorage.getItem('analysis_history') || '[]');
+                        localStorage.setItem('analysis_history', JSON.stringify([newReport, ...existing]));
+                        alert('レポートを保存しました！マイページで確認できます。');
+                    }}
+                    style={{
+                        flex: 1,
+                        padding: '1rem',
+                        background: '#333',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                    }}
                 >
-                    <span>📥</span> 分析結果を画像として保存
+                    <span>💾</span> レポートを保存
                 </button>
 
+                <button
+                    onClick={handleDownloadImage}
+                    style={{
+                        width: '54px',
+                        height: '54px',
+                        padding: '0',
+                        background: 'white',
+                        color: '#333',
+                        border: '1px solid #ddd',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.5rem'
+                    }}
+                    title="画像を保存"
+                >
+                    📥
+                </button>
+            </div>
+
+            <div style={{ marginTop: '1rem' }}>
                 <Link href="/packages" style={{
                     display: 'block',
                     padding: '1rem',

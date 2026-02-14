@@ -32,6 +32,14 @@ export default function MyPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const [subTab, setSubTab] = useState<'HISTORY' | 'WISHLIST' | 'RESERVATIONS'>('HISTORY');
+    const [history, setHistory] = useState<any[]>(DIAGNOSIS_HISTORY);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('analysis_history');
+        if (saved) {
+            setHistory(JSON.parse(saved));
+        }
+    }, []);
 
     // useEffect(() => { // This useEffect is removed as per instruction
     //     if (!loading && !user) {
@@ -85,7 +93,7 @@ export default function MyPage() {
                     <p>美容に関心が高い20代後半、乾燥肌タイプ</p>
                     <div className={styles.statsRow}>
                         <div className={styles.statItem}>
-                            <span className={styles.statValue}>{DIAGNOSIS_HISTORY.length}</span>
+                            <span className={styles.statValue}>{history.length}</span>
                             <span className={styles.statLabel}>診断回数</span>
                         </div>
                         <div className={styles.statItem}>
@@ -128,7 +136,7 @@ export default function MyPage() {
                 {/* 1. History */}
                 {subTab === 'HISTORY' && (
                     <motion.div className={styles.grid} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        {DIAGNOSIS_HISTORY.map(item => (
+                        {history.map(item => (
                             <div key={item.id} className={styles.card}>
                                 <div className={styles.cardHeader}>
                                     <span className={styles.tag} style={{ background: item.score >= 80 ? 'var(--c-accent)' : '#f0f0f0', color: item.score >= 80 ? 'white' : '#666' }}>
