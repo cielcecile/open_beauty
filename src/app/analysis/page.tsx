@@ -320,7 +320,7 @@ export default function AnalysisPage() {
                 <div className={styles.detailSection} style={{ background: '#fffaf0', border: '1px solid #eddcd2' }}>
                     <h3 className={styles.sectionTitle} style={{ color: '#d4a373' }}>💉 おすすめの施術ソリューション</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {surveyData.concerns.length > 0 ? surveyData.concerns.map(c => (
+                        {surveyData?.concerns?.length > 0 ? surveyData.concerns.map(c => (
                             <div key={c} style={{ background: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                                 <strong style={{ color: '#e53e3e', fontSize: '0.9rem', display: 'block', marginBottom: '0.3rem' }}>悩み: {c}</strong>
                                 <p style={{ fontSize: '0.85rem', whiteSpace: 'pre-line', color: '#555', lineHeight: 1.6 }}>
