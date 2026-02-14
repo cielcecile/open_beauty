@@ -299,7 +299,30 @@ export default function AnalysisPage() {
 
             {/* Action Buttons */}
             {/* Action Buttons */}
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem', justifyContent: 'space-between' }}>
+                {/* Save Image (Left) */}
+                <button
+                    onClick={handleDownloadImage}
+                    style={{
+                        flex: 1,
+                        padding: '1rem',
+                        background: 'white',
+                        color: '#333',
+                        border: '1px solid #ddd',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        fontSize: '0.9rem'
+                    }}
+                >
+                    <span>📥</span> 画像として保存
+                </button>
+
+                {/* Save Report (Right) */}
                 <button
                     onClick={() => {
                         const newReport = {
@@ -327,31 +350,11 @@ export default function AnalysisPage() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '0.5rem'
+                        gap: '0.5rem',
+                        fontSize: '0.9rem'
                     }}
                 >
                     <span>💾</span> レポートを保存
-                </button>
-
-                <button
-                    onClick={handleDownloadImage}
-                    style={{
-                        width: '54px',
-                        height: '54px',
-                        padding: '0',
-                        background: 'white',
-                        color: '#333',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.5rem'
-                    }}
-                    title="画像を保存"
-                >
-                    📥
                 </button>
             </div>
 
