@@ -289,11 +289,11 @@ export default function AnalysisPage() {
                             labels: ['水分', '弾力', '毛穴', '色素', 'シワ'],
                             datasets: [{
                                 label: 'あなたのスコア',
-                                data: scores,
+                                data: scores || [0, 0, 0, 0, 0],
                                 backgroundColor: 'rgba(212, 163, 115, 0.2)',
                                 borderColor: '#d4a373',
                                 borderWidth: 2,
-                                pointBackgroundColor: scores.map(s => s < 80 ? '#FF6B6B' : '#d4a373'),
+                                pointBackgroundColor: (scores || [0, 0, 0, 0, 0]).map(s => s < 80 ? '#FF6B6B' : '#d4a373'),
                                 pointRadius: 4
                             }]
                         }}
@@ -308,8 +308,8 @@ export default function AnalysisPage() {
                         {['水分', '弾力', '毛穴', '色素', 'シワ'].map((label, i) => (
                             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', borderBottom: '1px dashed #eee' }}>
                                 <span>{label}</span>
-                                <span style={{ fontWeight: 'bold', color: scores[i] < 80 ? '#e53e3e' : '#333' }}>
-                                    {scores[i]}点 {scores[i] < 80 && '⚠️'}
+                                <span style={{ fontWeight: 'bold', color: (scores?.[i] || 0) < 80 ? '#e53e3e' : '#333' }}>
+                                    {scores?.[i] || 0}点 {(scores?.[i] || 0) < 80 && '⚠️'}
                                 </span>
                             </div>
                         ))}
