@@ -39,7 +39,7 @@ export default function HospitalsPage() {
                         className={`${styles.tab} ${activeTab === cat.id ? styles.activeTab : ''}`}
                         onClick={() => setActiveTab(cat.id)}
                     >
-                        {cat.label} ({cat.name})
+                        {cat.label}
                     </button>
                 ))}
             </div>
