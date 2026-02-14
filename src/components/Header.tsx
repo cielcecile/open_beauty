@@ -27,7 +27,7 @@ export default function Header() {
                             <button
                                 onClick={() => setShowMenu(!showMenu)}
                                 style={{
-                                    background: 'linear-gradient(135deg, #7e3af2, #6c2bd9)',
+                                    background: 'linear-gradient(135deg, #D4AF37, #b89628)',
                                     color: '#fff',
                                     border: 'none',
                                     borderRadius: '50%',
@@ -72,8 +72,8 @@ export default function Header() {
                         <button
                             onClick={() => setShowLogin(true)}
                             style={{
-                                background: 'none', border: '1.5px solid #7e3af2',
-                                color: '#7e3af2', borderRadius: '8px',
+                                background: 'none', border: '1.5px solid var(--c-accent)',
+                                color: 'var(--c-accent)', borderRadius: '8px',
                                 padding: '0.35rem 0.8rem', fontSize: '0.8rem',
                                 fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
                             }}

@@ -74,7 +74,7 @@
 
 .message {
     font-size: 0.9rem;
-    color: #7e3af2;
+    color: var(--c-accent);
     margin: 0;
     font-weight: 500;
 }
@@ -152,7 +152,7 @@
 }
 
 .input:focus {
-    border-color: #7e3af2;
+    border-color: var(--c-accent);
 }
 
 .error {
@@ -175,7 +175,7 @@
 
 .submitBtn {
     padding: 0.9rem;
-    background: linear-gradient(135deg, #7e3af2, #6c2bd9);
+    background: linear-gradient(135deg, #D4AF37, #b89628);
     color: #fff;
     border: none;
     border-radius: 12px;
@@ -188,7 +188,7 @@
 
 .submitBtn:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(126, 58, 242, 0.3);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
 }
 
 .submitBtn:disabled {
@@ -206,7 +206,7 @@
 .switchMode button {
     background: none;
     border: none;
-    color: #7e3af2;
+    color: var(--c-accent);
     font-weight: 700;
     cursor: pointer;
     font-size: 0.85rem;
