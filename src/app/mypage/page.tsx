@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import Auth from '@/components/Auth';
 import styles from './mypage.module.css';
 
 // Mock Data
@@ -32,14 +33,22 @@ export default function MyPage() {
     const router = useRouter();
     const [subTab, setSubTab] = useState<'HISTORY' | 'WISHLIST' | 'RESERVATIONS'>('HISTORY');
 
-    useEffect(() => {
-        if (!loading && !user) {
-            router.push('/');
-        }
-    }, [user, loading, router]);
+    // useEffect(() => { // This useEffect is removed as per instruction
+    //     if (!loading && !user) {
+    //         router.push('/');
+    //     }
+    // }, [user, loading, router]);
 
     if (loading) return <div className={styles.container}>Loading...</div>;
-    if (!user) return null;
+
+    // Show Login Screen if not authenticated
+    if (!user) {
+        return (
+            <div className={styles.container} style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Auth />
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>
