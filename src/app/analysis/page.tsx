@@ -298,32 +298,33 @@ export default function AnalysisPage() {
             </div>
 
             {/* Action Buttons */}
-            {/* Action Buttons */}
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.6rem', justifyContent: 'space-between' }}>
-                {/* Save Image (Left) */}
+            {/* Action Buttons Grid */}
+            <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem' }}>
+
+                {/* 1. Save Image */}
                 <button
                     onClick={handleDownloadImage}
                     style={{
-                        flex: 1,
-                        padding: '1rem 0.5rem',
+                        padding: '0.8rem 0.2rem',
                         background: 'white',
                         color: '#333',
                         border: '1px solid #ddd',
                         borderRadius: '8px',
-                        fontWeight: 'bold',
                         cursor: 'pointer',
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.3rem',
-                        fontSize: '0.85rem',
-                        whiteSpace: 'nowrap'
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold'
                     }}
                 >
-                    <span>📥</span> 画像として保存
+                    <span style={{ fontSize: '1.2rem' }}>📥</span>
+                    <span>画像保存</span>
                 </button>
 
-                {/* Save Report (Right) */}
+                {/* 2. Save Report */}
                 <button
                     onClick={() => {
                         const newReport = {
@@ -340,39 +341,63 @@ export default function AnalysisPage() {
                         alert('レポートを保存しました！マイページで確認できます。');
                     }}
                     style={{
-                        flex: 1,
-                        padding: '1rem 0.5rem',
+                        padding: '0.8rem 0.2rem',
                         background: '#333',
                         color: 'white',
                         border: 'none',
                         borderRadius: '8px',
-                        fontWeight: 'bold',
                         cursor: 'pointer',
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.3rem',
-                        fontSize: '0.85rem',
-                        whiteSpace: 'nowrap'
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold'
                     }}
                 >
-                    <span>💾</span> レポートを保存
+                    <span style={{ fontSize: '1.2rem' }}>💾</span>
+                    <span>レポート保存</span>
                 </button>
-            </div>
 
-            <div style={{ marginTop: '1rem' }}>
+                {/* 3. Travel Plan */}
                 <Link href="/packages" style={{
-                    display: 'block',
-                    padding: '1rem',
-                    background: 'linear-gradient(90deg, #d4a373, #e1c05e)',
-                    color: 'white',
-                    fontWeight: 'bold',
+                    padding: '0.8rem 0.2rem',
+                    background: 'white',
+                    color: '#333',
+                    border: '1px solid #ddd',
                     borderRadius: '8px',
                     textDecoration: 'none',
-                    textAlign: 'center',
-                    boxShadow: '0 4px 10px rgba(212, 163, 115, 0.3)'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.3rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold'
                 }}>
-                    ✈️ おすすめの韓国美容旅行プランを見る
+                    <span style={{ fontSize: '1.2rem' }}>✈️</span>
+                    <span>旅行プラン</span>
+                </Link>
+
+                {/* 4. My Page */}
+                <Link href="/mypage" style={{
+                    padding: '0.8rem 0.2rem',
+                    background: 'white',
+                    color: '#333',
+                    border: '1px solid #ddd',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.3rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold'
+                }}>
+                    <span style={{ fontSize: '1.2rem' }}>👤</span>
+                    <span>マイページ</span>
                 </Link>
             </div>
 
