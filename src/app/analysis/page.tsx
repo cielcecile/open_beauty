@@ -342,9 +342,9 @@ export default function AnalysisPage() {
                     }}
                     style={{
                         padding: '0.8rem 0.2rem',
-                        background: '#333',
-                        color: 'white',
-                        border: 'none',
+                        background: 'white',
+                        color: '#333',
+                        border: '1px solid #ddd',
                         borderRadius: '8px',
                         cursor: 'pointer',
                         display: 'flex',
