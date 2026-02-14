@@ -1,0 +1,133 @@
+.section {
+    margin: 2rem 0;
+    padding: 0 1.2rem;
+}
+
+.sectionTitle {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.summary {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1.2rem;
+    background: linear-gradient(135deg, #fffbf0, #fff5e5);
+    border-radius: 12px;
+    margin-bottom: 1.2rem;
+    border: 1px solid #ffeaa7;
+}
+
+.avgScore {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.avgNumber {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #d4af37;
+}
+
+.avgLabel {
+    font-size: 0.85rem;
+    color: #999;
+}
+
+.avgStars {
+    color: #ff6b6b;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+}
+
+.totalCount {
+    font-size: 0.8rem;
+    color: #999;
+    margin-left: auto;
+}
+
+.reviewList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.reviewCard {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1.1rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.reviewHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.7rem;
+}
+
+.authorInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e5d1c7, #d4af37);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.authorName {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.reviewDate {
+    display: block;
+    font-size: 0.7rem;
+    color: #bbb;
+}
+
+.reviewStars {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.reviewContent {
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.7;
+}
+
+@media (max-width: 480px) {
+    .section {
+        padding: 0 1rem;
+    }
+
+    .summary {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .totalCount {
+        width: 100%;
+        margin-left: 0;
+        text-align: center;
+    }
+}

@@ -1,0 +1,149 @@
+.headerContainer {
+    margin-bottom: 2rem;
+}
+
+.heroImage {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    border-radius: 0 0 24px 24px;
+    overflow: hidden;
+    background: #f0ede8;
+}
+
+.imageFallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e5d1c7, #d4af37);
+    font-size: 4rem;
+}
+
+.backBtn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.backBtn:hover {
+    transform: scale(1.1);
+}
+
+.categoryBadge {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(212, 175, 55, 0.9);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.infoSection {
+    padding: 1.5rem 1.2rem 0;
+}
+
+.hospitalName {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #333;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.ratingRow {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.8rem;
+}
+
+.stars {
+    color: #ff6b6b;
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+.ratingValue {
+    font-weight: 700;
+    color: #ff6b6b;
+    font-size: 0.95rem;
+}
+
+.reviewCount {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.description {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.7;
+    margin-bottom: 0.5rem;
+}
+
+.detailDescription {
+    font-size: 0.85rem;
+    color: #777;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.addressRow {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 1rem;
+}
+
+.tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tag {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    background: #f5f0ea;
+    color: #666;
+    border-radius: 16px;
+    font-weight: 500;
+}
+
+@media (max-width: 480px) {
+    .heroImage {
+        height: 220px;
+        border-radius: 0 0 16px 16px;
+    }
+
+    .hospitalName {
+        font-size: 1.3rem;
+    }
+
+    .infoSection {
+        padding: 1rem 1rem 0;
+    }
+}

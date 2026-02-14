@@ -68,7 +68,7 @@ export default function HospitalsPage() {
                                     <span className={styles.tag}>プレミアム</span>
                                     <span className={styles.tag}>日本語OK</span>
                                 </div>
-                                <button className={styles.detailBtn}>詳細を見る &rarr;</button>
+                                <Link href={`/hospitals/${clinic.id}`} className={styles.detailBtn} style={{ textDecoration: 'none', display: 'inline-block' }}>詳細を見る &rarr;</Link>
                             </div>
                         </div>
                     ))
