@@ -55,7 +55,8 @@ export default function MyPage() {
                         // Get first concern or default
                         highlight: item.survey_data?.concerns?.[0] || '特になし',
                         // Calculate average score
-                        score: item.scores ? Math.round(item.scores.reduce((a: number, b: number) => a + b, 0) / item.scores.length) : 0
+                        score: item.scores ? Math.round(item.scores.reduce((a: number, b: number) => a + b, 0) / item.scores.length) : 0,
+                        imageUrl: item.image_url
                     }));
                     setHistory(formattedHistory);
                 }
@@ -80,7 +81,7 @@ export default function MyPage() {
                         const hospitalMap = Object.fromEntries(
                             hospitalsData.map(h => [h.id, h])
                         );
-                        
+
                         const formattedWishlist = wishlistData.map(item => {
                             const hospital = hospitalMap[item.hospital_id];
                             return {
@@ -109,6 +110,7 @@ export default function MyPage() {
                     const formattedTreatments = treatmentsData.map(item => ({
                         id: item.id,
                         name: item.treatment_name,
+                        name_en: item.treatment_name_en || '',
                         price: item.treatment_price,
                         effect: item.treatment_desc,
                         time: item.treatment_time,
@@ -168,6 +170,29 @@ export default function MyPage() {
 
             if (error) {
                 console.error('Error removing treatment:', error);
+                alert('削除に失敗しました。');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+
+    // Delete from History
+    const handleRemoveFromHistory = async (id: number) => {
+        if (!confirm('本当にこの診断履歴を削除しますか？')) return;
+
+        // Optimistic Update
+        setHistory(prev => prev.filter(item => item.id !== id));
+
+        try {
+            const { error } = await supabase
+                .from('analysis_results')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                console.error('Error removing history:', error);
                 alert('削除に失敗しました。');
             }
         } catch (err) {
@@ -266,15 +291,41 @@ export default function MyPage() {
                 {subTab === 'HISTORY' && (
                     <motion.div className={styles.grid} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                         {isLoadingData ? <p>読み込み中...</p> : history.length > 0 ? history.map(item => (
-                            <div key={item.id} className={styles.card}>
+                            <div key={item.id} className={styles.card} style={{ position: 'relative', overflow: 'hidden' }}>
                                 <div className={styles.cardHeader}>
                                     <span className={styles.tag} style={{ background: item.score >= 80 ? 'var(--c-accent)' : '#f0f0f0', color: item.score >= 80 ? 'white' : '#666' }}>
                                         Score: {item.score}
                                     </span>
-                                    <span style={{ fontSize: '1.5rem' }}>📊</span>
+                                    {/* Delete Button */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span style={{ fontSize: '1.5rem' }}>📊</span>
+                                        <button
+                                            className={styles.deleteBtn}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleRemoveFromHistory(item.id);
+                                            }}
+                                            style={{ marginLeft: '0.5rem' }}
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
                                 </div>
-                                <h3 className={styles.cardTitle}>{item.faceType}</h3>
-                                <p className={styles.cardSubtitle}>肌年齢: {item.skinAge}歳 / 悩み: {item.highlight}</p>
+
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', margin: '1rem 0' }}>
+                                    {item.imageUrl && (
+                                        <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid #eee' }}>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={item.imageUrl} alt="Analysis" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h3 className={styles.cardTitle} style={{ marginBottom: '0.2rem' }}>{item.faceType}</h3>
+                                        <p className={styles.cardSubtitle}>肌年齢: {item.skinAge}歳 / 悩み: {item.highlight}</p>
+                                    </div>
+                                </div>
+
                                 <Link href={`/analysis?id=${item.id}`} className={`${styles.button} ${styles['button-outline']}`}>詳細を見る</Link>
                                 <span className={styles.date}>{item.date}</span>
                             </div>
@@ -322,6 +373,11 @@ export default function MyPage() {
                                         <button className={styles.deleteBtn} onClick={() => handleRemoveFromTreatments(treatment.id)}>×</button>
                                     </div>
                                     <h3 className={styles.cardTitle}>{treatment.name}</h3>
+                                    {treatment.name_en && (
+                                        <p style={{ fontSize: '0.8rem', color: '#999', margin: '2px 0 8px 0', fontStyle: 'italic' }}>
+                                            {treatment.name_en}
+                                        </p>
+                                    )}
                                     <p className={styles.cardSubtitle}>{treatment.effect}</p>
                                     <div style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--c-accent)', fontSize: '1.1rem' }}>{treatment.price}</div>
                                     <button className={`${styles.button} ${styles['button-outline']}`}>価格比較を見る</button>

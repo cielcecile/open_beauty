@@ -27,11 +27,94 @@
     cursor: pointer;
     transition: all 0.3s ease;
     margin-bottom: 2rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .uploadBox:hover {
     border-color: var(--c-accent);
     background-color: #fdfdfa;
+}
+
+/* Entry Option Buttons (Pastel Banners) */
+.entryOption {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 1rem auto;
+    padding: 1.2rem;
+    border-radius: 16px;
+    color: #333;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+/* Photo Upload - Pastel Purple/Blue */
+.entryOption:nth-child(1) {
+    background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+    color: white;
+    /* Removed border */
+    box-shadow: 0 4px 25px rgba(157, 78, 221, 0.5);
+}
+
+/* Quick Diagnosis - Pastel Orange/Yellow or Green */
+.entryOption:nth-child(2) {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    color: white;
+}
+
+.entryOption:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Shine effect */
+.entryOption::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.2) 50%,
+            rgba(255, 255, 255, 0) 100%);
+    transform: skewX(-25deg);
+    animation: shine 6s infinite;
+}
+
+.entryOption strong {
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0;
+    letter-spacing: 0.05em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.entryOption div {
+    font-size: 0.75rem !important;
+    opacity: 0.95;
+    font-weight: 500;
+    margin-top: 0.1rem;
+    line-height: 1.4;
+    color: white !important;
+}
+
+.entryOption span {
+    font-size: 1.6rem !important;
+    margin-bottom: 0.1rem !important;
+    display: block;
 }
 
 .icon {

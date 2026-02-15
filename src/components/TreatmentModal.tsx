@@ -10,6 +10,7 @@ import styles from './TreatmentModal.module.css';
 interface Treatment {
     id: string;
     name: string;
+    name_en?: string;
     description: string;
     image_url?: string;
     price?: string;
@@ -43,6 +44,7 @@ export default function TreatmentModal({ treatment, onClose }: TreatmentModalPro
                     {
                         user_id: user.id,
                         treatment_name: treatment.name,
+                        treatment_name_en: treatment.name_en || '',
                         treatment_desc: treatment.description,
                         treatment_price: treatment.price || '',
                         treatment_time: treatment.time || '',
@@ -102,6 +104,11 @@ export default function TreatmentModal({ treatment, onClose }: TreatmentModalPro
                 {/* Content */}
                 <div className={styles.content}>
                     <h2 className={styles.title}>{treatment.name}</h2>
+                    {treatment.name_en && (
+                        <p style={{ fontSize: '0.9rem', color: '#666', margin: '4px 0 12px 0', fontStyle: 'italic' }}>
+                            {treatment.name_en}
+                        </p>
+                    )}
 
                     {treatment.concern_type && (
                         <span className={styles.tag}>{treatment.concern_type}</span>

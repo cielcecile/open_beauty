@@ -4,12 +4,25 @@
   align-items: center;
   justify-content: flex-start;
   padding: 1.5rem;
-  padding-top: 12vh;
+  padding-top: 4vh;
   /* Moved content higher from the center */
   height: 100%;
   flex: 1;
   width: 100%;
   box-sizing: border-box;
+}
+
+.quizSection {
+  margin: 1rem auto 0 auto;
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quizSection>a:first-child {
+  box-shadow: 0 4px 25px rgba(255, 154, 158, 0.6);
 }
 
 .hero {
@@ -30,7 +43,7 @@
   font-weight: 800;
   line-height: 1.25;
   color: var(--c-text);
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   letter-spacing: -0.02em;
 }
 
@@ -38,7 +51,7 @@
   font-size: 0.95rem;
   /* Compact subtitle */
   color: #666;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   line-height: 1.6;
 }
 
@@ -65,11 +78,43 @@
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
 .visionButton:hover {
   transform: translateY(-3px) scale(1.01);
   box-shadow: 0 12px 25px rgba(212, 175, 55, 0.4);
+}
+
+/* Shine effect */
+.visionButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-25deg);
+  animation: shine 6s infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+
+  20% {
+    left: 200%;
+  }
+
+  100% {
+    left: 200%;
+  }
 }
 
 .visionButton:active {

@@ -13,6 +13,7 @@ import styles from './result.module.css';
 
 interface Treatment {
     name: string;
+    name_en?: string;
     desc: string;
     price: string;
     time: string;
@@ -22,6 +23,7 @@ interface Treatment {
 const TREATMENTS_DATABASE: Record<string, Treatment> = {
     sagging: {
         name: "シュリンク・ユニバース",
+        name_en: "Shrink Universe",
         desc: "超音波エネルギーで肌の深層部をリフトアップし、弾力を改善します。",
         price: "99,000ウォン~",
         time: "20分",
@@ -29,6 +31,7 @@ const TREATMENTS_DATABASE: Record<string, Treatment> = {
     },
     wrinkles: {
         name: "シワボトックス",
+        name_en: "Wrinkle Botox",
         desc: "筋肉の動きを調整し、表情ジワを緩和・予防します。",
         price: "30,000ウォン~",
         time: "5分",
@@ -36,6 +39,7 @@ const TREATMENTS_DATABASE: Record<string, Treatment> = {
     },
     pores: {
         name: "アクアピール & ピコトーニング",
+        name_en: "Aquapeel & Pico Toning",
         desc: "毛穴の汚れを洗浄し、色素を改善して透明感のある肌を作ります。",
         price: "50,000ウォン~",
         time: "40分",
@@ -43,6 +47,7 @@ const TREATMENTS_DATABASE: Record<string, Treatment> = {
     },
     pigment: {
         name: "ピコトーニング",
+        name_en: "Pico Toning",
         desc: "シミ・くしみを効果的に除去し、肌のトーンを明るくします。",
         price: "45,000ウォン~",
         time: "15分",
@@ -50,6 +55,7 @@ const TREATMENTS_DATABASE: Record<string, Treatment> = {
     },
     default: {
         name: "Lienjang シグネチャーケア",
+        name_en: "Lienjang Signature Care",
         desc: "お客様の肌状態に合わせた1:1オーダーメイドの複合管理プログラムです。",
         price: "要相談",
         time: "60分",
@@ -142,6 +148,7 @@ function ResultContent() {
                     .insert({
                         user_id: user.id,
                         treatment_name: result.name,
+                        treatment_name_en: result.name_en || '',
                         treatment_desc: result.desc,
                         treatment_price: result.price,
                         treatment_time: result.time,
@@ -184,12 +191,20 @@ function ResultContent() {
                 transition={{ delay: 1, duration: 0.6 }}
             >
                 <span className={styles.typeTag}>#GlassSkin_Wannabe</span>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-                    <h2 className={styles.treatmentName}>{result.name}</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                        <h2 className={styles.treatmentName}>{result.name}</h2>
+                        {result.name_en && (
+                            <p style={{ fontSize: '0.85rem', color: '#888', margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                                {result.name_en}
+                            </p>
+                        )}
+                    </div>
                     <button
                         onClick={() => {
                             setSelectedTreatment({
                                 name: result.name,
+                                name_en: result.name_en,
                                 description: result.desc,
                                 price: result.price,
                                 time: result.time,

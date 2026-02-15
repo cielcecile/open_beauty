@@ -36,7 +36,7 @@ ChartJS.register(
 const SURVEY_QUESTIONS = {
     ageGroup: ['20代', '30代', '40代', '50代以上'],
     skinType: ['乾燥肌 (Dry)', '脂性肌 (Oily)', '混合肌 (Combi)', '敏感肌 (Sensitive)'],
-    concerns: ['たるみ/弾力', 'シワ', '毛穴/傷跡', 'シミ/肝斑', 'ニキ비'],
+    concerns: ['たるみ/弾力', 'シワ', '毛穴/傷跡', 'シミ/肝斑', 'ニキビ'],
     budget: ['実用重視 (<30万ウォン)', '標準 (30~100万ウォン)', 'プレミアム (100万ウォン+)'],
     downtime: ['全くなし', '2-3日可能', '1週間可能']
 };
@@ -46,13 +46,13 @@ const TREATMENTS_DESC: { [key: string]: string } = {
     'たるみ/弾力': 'オリジオ (Oligio): 強力な高周波で即時的なリフトアップ効果\nシュリンクユニバース: 超音波でフェイスラインを引き締め',
     'シワ': 'ボトックス: 表情ジワの改善\nフィラー: 深いシワのボリューム改善',
     '毛穴/傷跡': 'ジュベルック: コラーゲン生成を促進し毛穴を縮小\nポテンツァ: マイクロニードルで肌質改善',
-    'シミ/肝斑': 'ピコトーニング: シミ을薄くし肌のトーンアップ\n美白点滴: 体の内側から輝く肌へ',
+    'シミ/肝斑': 'ピコトーニング: シミを薄くし肌のトーンアップ\n美白点滴: 体の内側から輝く肌へ',
     'ニキビ': 'アグネス: 繰り返すニキビの根源を破壊\nPDT治療: 皮脂分泌を抑制'
 };
 
 const CLINICS = [
     { id: 'd1', name: 'アウルムクリニック', rating: 4.9, desc: 'ソウル大出身、プレミアム1:1管理', location: '江南・新沙', tags: ['リフトアップ', '肌管理'] },
-    { id: 'p1', name: '리엔장성형외과', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧', location: '江南・駅三', tags: ['ボトックス', 'フィラー'] }
+    { id: 'p1', name: 'リエヌジャン美容外科', rating: 4.8, desc: 'リーズナブルで外国人対応も完璧', location: '江南・駅三', tags: ['ボトックス', 'フィラー'] }
 ];
 
 // Mock History Data for Initial Demo (Matching MyPage)
@@ -60,7 +60,7 @@ const MOCK_HISTORY = [
     {
         id: 1,
         date: '2026-02-12',
-        faceType: '엘레강트 캣',
+        faceType: 'エレガントキャット',
         skinAge: { apparentAge: 25 },
         scores: [90, 85, 80, 85, 85], // High scores
         surveyData: {
@@ -75,7 +75,7 @@ const MOCK_HISTORY = [
     {
         id: 2,
         date: '2025-11-20',
-        faceType: '내추럴',
+        faceType: 'ナチュラル',
         skinAge: { apparentAge: 27 },
         scores: [70, 75, 70, 75, 70], // Average scores
         surveyData: {
@@ -127,6 +127,7 @@ function AnalysisContent() {
     const [showClinicModal, setShowClinicModal] = useState(false);
     const [savedClinicName, setSavedClinicName] = useState('');
     const [treatments, setTreatments] = useState<any[]>([]);
+    const [recommendations, setRecommendations] = useState<any[]>([]); // AI Recommended Treatments
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
     const [selectedTreatment, setSelectedTreatment] = useState<any>(null);
 
@@ -134,6 +135,12 @@ function AnalysisContent() {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            // Check file size (limit to 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('画像サイズが大きすぎます。5MB以下の画像を選択してください。');
+                return;
+            }
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImage(reader.result as string);
@@ -160,21 +167,81 @@ function AnalysisContent() {
         }
     };
 
+    const [aiMessage, setAiMessage] = useState<string>('');
+
     const startComprehensiveAnalysis = async () => {
         setStep('ANALYZING');
 
-        // Mock Analysis Logic
-        const baseScores = [85, 80, 75, 80, 85];
-        if (surveyData.concerns.includes('たるみ/弾力')) baseScores[1] -= 20;
-        if (surveyData.concerns.includes('毛穴/傷跡')) baseScores[2] -= 25;
-        if (surveyData.concerns.includes('シミ/肝斑')) baseScores[3] -= 20;
-        if (surveyData.concerns.includes('シワ')) baseScores[4] -= 20;
-        setScores(baseScores);
+        try {
+            // Real AI Analysis
+            if (image) {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image }),
+                });
 
-        setTimeout(() => {
-            setAnalysisResult({ faceType: 'ナチュラル', skinAge: { apparentAge: 25 } });
-            setStep('RESULT');
-        }, 2500);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorDetails = 'Analysis failed';
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorDetails = errorJson.details || errorJson.error || errorText;
+                    } catch (e) {
+                        errorDetails = `Server Error: ${response.status} ${response.statusText}`;
+                    }
+                    throw new Error(errorDetails);
+                }
+
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error("Failed to parse API response:", text);
+                    throw new Error("Invalid response from server");
+                }
+
+                setAnalysisResult({
+                    faceType: data.faceType,
+                    skinAge: { apparentAge: data.skinAge }
+                });
+                setScores(data.scores);
+                setAiMessage(data.message);
+
+                // Set AI Recommendations
+                if (data.recommendations) {
+                    setRecommendations(data.recommendations);
+                }
+
+                if (data.concerns && data.concerns.length > 0) {
+                    setSurveyData(prev => ({
+                        ...prev,
+                        concerns: Array.from(new Set([...prev.concerns, ...data.concerns]))
+                    }));
+                }
+
+                setStep('RESULT');
+            } else {
+                // Fallback for Survey-only mode (No Image)
+                const baseScores = [50, 50, 50, 50, 50]; // Neural default
+                setScores(baseScores);
+                setTimeout(() => {
+                    setAnalysisResult({ faceType: 'ナチュラル', skinAge: { apparentAge: 25 } });
+                    setAiMessage('アンケート結果に基づいた診断です。写真はアップロードされていません。');
+                    setStep('RESULT');
+                }, 2000);
+            }
+        } catch (error: any) {
+            console.error(error);
+            const msg = error.message || String(error);
+            if (msg.includes('Failed to fetch')) {
+                alert('サーバーとの通信に失敗しました。画像サイズを小さくするか、しばらく経ってから再試行してください。');
+            } else {
+                alert(`AI分析エラー: ${msg}`);
+            }
+            setStep('UPLOAD'); // Go back
+        }
     };
 
     const handleDownloadImage = async () => {
@@ -290,7 +357,7 @@ function AnalysisContent() {
 
     const handleAddToWishlist = async (clinic: any) => {
         if (!user) {
-            alert('로그인이 필요합니다.');
+            alert('ログインが必要です。');
             return;
         }
 
@@ -303,10 +370,10 @@ function AnalysisContent() {
 
         if (error) {
             if (error.code === '23505') { // Unique violation
-                alert('이미 저장되었습니다.');
+                alert('既に保存されています。');
             } else {
                 console.error('Error saving wishlist:', error);
-                alert('저장에 실패했습니다.');
+                alert('保存に失敗しました。');
             }
             return;
         }
@@ -319,119 +386,164 @@ function AnalysisContent() {
         <div className={styles.container}>
             <div id="result-content" className={styles.resultArea} style={{ marginTop: 0, background: '#fff' }}>
                 <h2 style={{ textAlign: 'center', fontSize: '1.4rem', marginBottom: '1.5rem', color: '#333' }}>
-                    あなたは <span style={{ color: '#d4a373', fontSize: '1.6rem', borderBottom: '2px solid #d4a373' }}>{analysisResult?.faceType || 'ナチュラル'}</span> タイプのお顔입니다!
+                    あなたは <span style={{ color: '#d4a373', fontSize: '1.6rem', borderBottom: '2px solid #d4a373' }}>{analysisResult?.faceType || 'ナチュラル'}</span> タイプのお顔です！
                 </h2>
 
                 <Yuna
-                    message={`${analysisResult?.faceType}タイプですね！全体적으로 魅力的ですが、いくつかの数値を改善するとさらに美しくなります。`}
+                    message={aiMessage || `${analysisResult?.faceType}タイプですね！全体的に魅力的ですが、いくつかの数値を改善するとさらに美しくなります。`}
+                    sideImage={image}
                 />
 
-                {image && (
-                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                        <div style={{ display: 'inline-block', position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '3px solid #eee', width: 120, height: 120 }}>
-                            <Image src={image} alt="Analyzed" width={120} height={120} style={{ objectFit: 'cover', display: 'block', borderRadius: 12 }} unoptimized />
-                            <div style={{ position: 'absolute', bottom: 0, right: 0, background: 'rgba(51,51,51,0.8)', color: 'white', fontSize: '0.6rem', padding: '2px 6px', borderTopLeftRadius: '6px' }}>Analyzed</div>
-                        </div>
-                    </div>
-                )}
-
-                <div className={styles.resultHeader}>
-                    <h3 className={styles.resultTitle} style={{ marginTop: '0.5rem' }}>
-                        <span style={{ display: 'block', fontSize: '1.8rem', marginBottom: '0.5rem', color: '#d4a373' }}>
-                            {analysisResult?.faceType}
-                        </span>
-                        <span style={{ display: 'block', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                            総合ビューティーレポート
-                        </span>
-                    </h3>
-                    <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem' }}>※ 写真診断は撮影環境により誤差が生じる場合があります。</p>
-                </div>
-
-                <div style={{ margin: '1rem auto', height: '300px', width: '100%', maxWidth: '500px', position: 'relative' }}>
+                <div className={styles.chartContainer}>
                     <Radar
                         data={{
-                            labels: ['水分', '弾力', '毛穴', '色素', 'シワ'],
-                            datasets: [{
-                                label: 'あなたのスコア',
-                                data: scores || [0, 0, 0, 0, 0],
-                                backgroundColor: 'rgba(212, 163, 115, 0.2)',
-                                borderColor: '#d4a373',
-                                borderWidth: 2,
-                                pointBackgroundColor: (scores || [0, 0, 0, 0, 0]).map(s => s < 80 ? '#FF6B6B' : '#d4a373'),
-                                pointRadius: 4
-                            }]
+                            labels: ['バランス', '肌のキメ', '透明感', 'ハリ・弾力', '水分量'],
+                            datasets: [
+                                {
+                                    label: 'あなたの分析結果',
+                                    data: scores,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 2,
+                                },
+                            ],
                         }}
-                        options={{ maintainAspectRatio: false, scales: { r: { min: 0, max: 100 } } }}
+                        options={{
+                            scales: {
+                                r: {
+                                    angleLines: {
+                                        color: 'rgba(0, 0, 0, 0.1)',
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.1)',
+                                    },
+                                    pointLabels: {
+                                        color: '#666',
+                                        font: {
+                                            size: 12,
+                                        },
+                                    },
+                                    ticks: {
+                                        display: false, // Hide numeric labels on the scale
+                                        stepSize: 20,
+                                    },
+                                    suggestedMin: 0,
+                                    suggestedMax: 100,
+                                },
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false,
+                                },
+                            },
+                            maintainAspectRatio: false,
+                        }}
                     />
                 </div>
 
-                <div style={{ background: '#fcfcfc', padding: '1rem', borderRadius: '8px', border: '1px solid #eee', marginBottom: '2rem' }}>
-                    <h4 style={{ textAlign: 'center', marginBottom: '1rem', fontSize: '0.95rem' }}>📊 肌ステータス詳細</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', fontSize: '0.9rem' }}>
-                        {['水分', '弾力', '毛穴', '色素', 'シワ'].map((label, i) => (
-                            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', borderBottom: '1px dashed #eee' }}>
-                                <span>{label}</span>
-                                <span style={{ fontWeight: 'bold', color: (scores?.[i] || 0) < 80 ? '#e53e3e' : '#333' }}>
-                                    {scores?.[i] || 0}点 {(scores?.[i] || 0) < 80 && '⚠️'}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem', marginBottom: '2rem', textAlign: 'center' }}>
+                    {['バランス', '肌のキメ', '透明感', 'ハリ・弾力', '水分量'].map((label, index) => (
+                        <div key={label} style={{ background: '#f8f9fa', padding: '0.5rem', borderRadius: '8px', border: '1px solid #eee' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#666', marginBottom: '0.2rem' }}>{label}</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#333' }}>{scores[index]}</div>
+                        </div>
+                    ))}
                 </div>
+
+
+
 
                 <div className={styles.detailSection} style={{ background: '#fffaf0', border: '1px solid #eddcd2' }}>
                     <h3 className={styles.sectionTitle} style={{ color: '#d4a373' }}>💉 おすすめの施術ソリューション</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {surveyData?.concerns?.length > 0 ? surveyData.concerns.map(c => {
-                            const matchingTreatments = treatments.filter(t => t.concern_type === c);
-                            return (
-                                <div key={c}>
-                                    <strong style={{ color: '#e53e3e', fontSize: '0.9rem', display: 'block', marginBottom: '0.8rem' }}>悩み: {c}</strong>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                                        {matchingTreatments.length > 0 ? matchingTreatments.map(treatment => (
-                                            <div key={treatment.id} style={{ background: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                                    <strong style={{ color: '#333', fontSize: '0.95rem' }}>{treatment.name}</strong>
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedTreatment(treatment);
-                                                            setShowTreatmentModal(true);
-                                                        }}
-                                                        style={{
-                                                            background: 'none',
-                                                            border: 'none',
-                                                            cursor: 'pointer',
-                                                            fontSize: '1.5rem',
-                                                            lineHeight: 1,
-                                                            padding: 0,
-                                                            transition: 'transform 0.2s'
-                                                        }}
-                                                        title="関心施術を見る"
-                                                    >
-                                                        🤍
-                                                    </button>
-                                                </div>
-                                                <p style={{ fontSize: '0.85rem', color: '#555', lineHeight: 1.6, margin: '0.5rem 0' }}>
-                                                    {treatment.description}
-                                                </p>
-                                                {(treatment.price || treatment.time || treatment.downtime) && (
-                                                    <div style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem', borderTop: '1px solid #eee', paddingTop: '0.5rem' }}>
-                                                        {treatment.price && <span>💰 {treatment.price} </span>}
-                                                        {treatment.time && <span>⏱ {treatment.time} </span>}
-                                                        {treatment.downtime && <span>✨ {treatment.downtime}</span>}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )) : (
-                                            <p style={{ fontSize: '0.85rem', color: '#999' }}>専門医との相談をおすすめします。</p>
-                                        )}
+
+                    {/* AI Recommendations Mode */}
+                    {recommendations.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                                AIがあなたの顔分析結果に基づいて厳選した施術です。
+                            </div>
+                            {recommendations.map((rec, idx) => (
+                                <div key={idx} style={{ background: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                        <div>
+                                            <span style={{ fontSize: '0.75rem', background: '#d4a373', color: 'white', padding: '2px 6px', borderRadius: '4px', marginRight: '6px' }}>
+                                                {rec.category || 'Recommned'}
+                                            </span>
+                                            <strong style={{ color: '#333', fontSize: '0.95rem' }}>{rec.name}</strong>
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: '0.85rem', color: '#666', lineHeight: 1.5, marginBottom: '0.5rem' }}>{rec.description}</p>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#e53e3e', textAlign: 'right' }}>
+                                        {rec.price_range}
                                     </div>
                                 </div>
-                            );
-                        }) : (
-                            <p>특히 고민이 없으셔도 주기적인 아쿠아필링 등 피부 관리를 추천합니다.</p>
-                        )}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        /* Fallback DB/Local Mode */
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {surveyData?.concerns?.length > 0 ? surveyData.concerns.map(c => {
+                                // Fix: Check if t.concerns array includes c (for DB data) vs t.concern_type (for Mock)
+                                const matchingTreatments = treatments.filter(t =>
+                                    t.concerns ? t.concerns.includes(c) : t.concern_type === c
+                                );
+
+                                if (matchingTreatments.length === 0) return null;
+
+                                return (
+                                    <div key={c}>
+                                        <strong style={{ color: '#e53e3e', fontSize: '0.9rem', display: 'block', marginBottom: '0.8rem' }}>悩み: {c}</strong>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                            {matchingTreatments.length > 0 ? matchingTreatments.map(treatment => (
+                                                <div key={treatment.id} style={{ background: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                                        <div style={{ flex: 1 }}>
+                                                            <strong style={{ color: '#333', fontSize: '0.95rem', display: 'block' }}>{treatment.name}</strong>
+                                                            {treatment.name_en && (
+                                                                <span style={{ fontSize: '0.8rem', color: '#999', fontStyle: 'italic' }}>{treatment.name_en}</span>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedTreatment(treatment);
+                                                                setShowTreatmentModal(true);
+                                                            }}
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                fontSize: '1.5rem',
+                                                                lineHeight: 1,
+                                                                padding: 0,
+                                                                transition: 'transform 0.2s'
+                                                            }}
+                                                            title="関心施術を見る"
+                                                        >
+                                                            🤍
+                                                        </button>
+                                                    </div>
+                                                    <p style={{ fontSize: '0.85rem', color: '#555', lineHeight: 1.6, margin: '0.5rem 0' }}>
+                                                        {treatment.description || treatment.effect}
+                                                    </p>
+                                                    {(treatment.price || treatment.time || treatment.downtime) && (
+                                                        <div style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem', borderTop: '1px solid #eee', paddingTop: '0.5rem' }}>
+                                                            {treatment.price && <span>💰 {treatment.price} </span>}
+                                                            {treatment.time && <span>⏱ {treatment.time} </span>}
+                                                            {treatment.downtime && <span>✨ {treatment.downtime}</span>}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )) : (
+                                                <p style={{ fontSize: '0.85rem', color: '#999' }}>専門医との相談をおすすめします。</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            }) : (
+                                <p>特に悩みがなくても、定期的なアクアピーリングなどのスキンケアをお勧めします。</p>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className={styles.detailSection}>
@@ -463,8 +575,36 @@ function AnalysisContent() {
                 <button
                     onClick={async () => {
                         if (!user) {
-                            alert('로그인이 필요합니다.');
+                            alert('ログインが必要です。');
                             return;
+                        }
+
+                        let imageUrl = null;
+                        if (image) {
+                            try {
+                                const base64Response = await fetch(image);
+                                const blob = await base64Response.blob();
+                                const fileExt = image.substring("data:image/".length, image.indexOf(";base64"));
+                                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+                                const { error: uploadError } = await supabase.storage
+                                    .from('analysis-images')
+                                    .upload(fileName, blob, {
+                                        contentType: `image/${fileExt}`,
+                                        upsert: true
+                                    });
+
+                                if (uploadError) {
+                                    console.error('Error uploading image:', uploadError);
+                                } else {
+                                    const { data: { publicUrl } } = supabase.storage
+                                        .from('analysis-images')
+                                        .getPublicUrl(fileName);
+                                    imageUrl = publicUrl;
+                                }
+                            } catch (e) {
+                                console.error('Error processing image:', e);
+                            }
                         }
 
                         const newReport = {
@@ -473,6 +613,7 @@ function AnalysisContent() {
                             skin_age: analysisResult?.skinAge?.apparentAge || 25,
                             scores: scores,
                             survey_data: surveyData,
+                            image_url: imageUrl
                         };
 
                         const { error: deleteError } = await supabase
@@ -490,7 +631,7 @@ function AnalysisContent() {
 
                         if (insertError) {
                             console.error('Error saving report:', insertError);
-                            alert('레포트 저장에 실패했습니다.');
+                            alert('レポートの保存に失敗しました。');
                         } else {
                             setShowSaveModal(true);
                         }
@@ -511,7 +652,9 @@ function AnalysisContent() {
                 >
                     <span style={{ fontSize: '1.4rem', marginRight: '0.5rem' }}>💾</span>レポート保存
                 </button>
-
+                <div style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+                    ※ 画像の保存には少し時間がかかる場合があります。
+                </div>
                 <button
                     onClick={handleDownloadImage}
                     style={{
@@ -528,7 +671,7 @@ function AnalysisContent() {
                     📥 画像として保存
                 </button>
             </div>
-        </div>
+        </div >
     );
 
     const renderEntry = () => (
@@ -537,13 +680,13 @@ function AnalysisContent() {
             <p style={{ textAlign: 'center', marginBottom: '2rem', color: '#666' }}>
                 あなたの写真を分析するか、<br />アンケートのみで診断するか選んでください。
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <button className={styles.uploadBox} onClick={() => setStep('UPLOAD')} style={{ padding: '2rem', background: '#333', color: 'white', border: 'none', marginBottom: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', alignItems: 'center' }}>
+                <button className={styles.entryOption} onClick={() => setStep('UPLOAD')}>
                     <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📸</span>
                     <strong>写真をアップロードして精密診断</strong>
                     <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '0.5rem' }}>AIが肌状態と顔のバランスを分析します</div>
                 </button>
-                <button className={styles.uploadBox} onClick={handleNoPhoto} style={{ padding: '1.5rem', background: 'white', color: '#333', border: '1px solid #ddd', marginBottom: 0 }}>
+                <button className={styles.entryOption} onClick={handleNoPhoto}>
                     <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '0.5rem' }}>📝</span>
                     <strong>写真なしでクイック診断</strong>
                     <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>アンケートのみでタイプを診断します</div>

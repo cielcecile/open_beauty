@@ -1,0 +1,36 @@
+-- SQL Migration to clean names
+ALTER TABLE public.treatments ADD COLUMN IF NOT EXISTS name_en TEXT;
+
+UPDATE public.treatments SET name = 'ボトックス', name_en = 'Botox' WHERE id = 't3';
+UPDATE public.treatments SET name = 'フィラー', name_en = 'Filler' WHERE id = 't4';
+UPDATE public.treatments SET name = 'ジュベルック', name_en = 'Juvelook' WHERE id = 't5';
+UPDATE public.treatments SET name = 'ポテンツァ', name_en = 'Potenza' WHERE id = 't6';
+UPDATE public.treatments SET name = 'ピコトーニング', name_en = 'PICO Toning' WHERE id = 't7';
+UPDATE public.treatments SET name = '美白点滴', name_en = 'Whitening IV Drip' WHERE id = 't8';
+UPDATE public.treatments SET name = 'アグネス', name_en = 'Agnes' WHERE id = 't9';
+UPDATE public.treatments SET name = 'PDT治療', name_en = 'PDT Treatment' WHERE id = 't10';
+UPDATE public.treatments SET name = 'オリジオ', name_en = 'Oligio' WHERE id = 't1';
+UPDATE public.treatments SET name = 'シュリンクユニバース', name_en = 'Shurink Universe' WHERE id = 't2';
+UPDATE public.treatments SET name = 'サーマージ', name_en = 'Thermage' WHERE id = '47035aee-153f-4cf9-abcf-0fa933dc7e53';
+UPDATE public.treatments SET name = 'インモード', name_en = 'InMode' WHERE id = 'fb31b95a-d853-4477-bad9-beda5ee08974';
+UPDATE public.treatments SET name = 'フラクショナルRF', name_en = 'Fractional RF' WHERE id = '11a1b665-14b3-4e4c-a33e-22bd40edf880';
+UPDATE public.treatments SET name = 'ウルセラ', name_en = 'Ultherapy' WHERE id = '54b66ead-c64d-487f-a1b3-babc2c11e435';
+UPDATE public.treatments SET name = 'ダブロ', name_en = 'Doublo' WHERE id = 'd85f7306-d9cd-4347-8130-88323a4f15c3';
+UPDATE public.treatments SET name = 'ウルトラプラス', name_en = 'Ultra Plus' WHERE id = 'b9f2eaee-41ae-461f-8c12-edfe9165bdf0';
+UPDATE public.treatments SET name = 'CO2レーザー', name_en = 'CO2 Laser' WHERE id = '90a95a1a-712b-416c-a1cc-0cfc8cf6d160';
+UPDATE public.treatments SET name = 'ピコレーザー', name_en = 'Picosecond Laser' WHERE id = '56b09b81-a056-4897-8d76-ee263b0b5871';
+UPDATE public.treatments SET name = 'エルビウムレーザー', name_en = 'Erbium Laser' WHERE id = '1e96bd87-4810-42c8-b792-b68747bf2c7b';
+UPDATE public.treatments SET name = 'ロングパルスNd:YAG', name_en = 'Long Pulsed Nd:YAG' WHERE id = '5a4696cc-c734-4503-83b4-0fdc1b2c12af';
+UPDATE public.treatments SET name = 'マイクロニードリング', name_en = 'Microneedling' WHERE id = '24210b4e-eb61-442a-91cb-a824a583840f';
+UPDATE public.treatments SET name = 'スキンブースティング', name_en = 'Skin Boosting' WHERE id = 'e21f3efa-4754-4984-9338-f4c5d3a0017d';
+UPDATE public.treatments SET name = '高周波治療', name_en = 'Radiofrequency (RF) Treatment' WHERE id = '23c2d56f-214e-45c1-be44-9f545004c451';
+UPDATE public.treatments SET name = 'ケミカルピーリング', name_en = 'Chemical Peeling' WHERE id = '4070035c-3d3a-4411-9ae5-23a6e53b5841';
+UPDATE public.treatments SET name = 'マイクロダーマブレージョン', name_en = 'Microdermabrasion' WHERE id = 'a9ed09cd-f6e9-4d28-b4ff-c276fe90d7cd';
+UPDATE public.treatments SET name = 'フラクショナルレーザー', name_en = 'Fractional Laser' WHERE id = 'f6c9643c-cae1-477f-824d-53cc1162cbff';
+UPDATE public.treatments SET name = 'サルファレーザー', name_en = 'Sulfur Laser' WHERE id = 'dd465f63-ff97-4d04-b0a3-0610436621fc';
+UPDATE public.treatments SET name = 'LED光線療法', name_en = 'LED Phototherapy' WHERE id = '5a0d4aa8-033d-44cb-b2d1-3ca7470b29cc';
+UPDATE public.treatments SET name = 'レーザートーニング', name_en = 'Laser Toning' WHERE id = 'a8af1da2-2daa-45dd-9677-9e3f187428c6';
+UPDATE public.treatments SET name = 'IPL集中光線療法', name_en = 'IPL Photorejuvenation' WHERE id = '01f9302d-547b-4504-b763-9f9c84f1941f';
+UPDATE public.treatments SET name = 'ピクセルレーザー', name_en = 'Pixel Laser' WHERE id = 'c5739eb1-44bc-4d82-9f89-d662b6307d41';
+UPDATE public.treatments SET name = 'LED赤外線治療', name_en = 'LED Infrared Therapy' WHERE id = 'a348c584-2683-4f22-81d1-37a4938619a1';
+UPDATE public.treatments SET name = '光力学療法', name_en = 'Photodynamic Therapy' WHERE id = 'e44d96df-9942-4b57-abb5-842753c40fa0';
