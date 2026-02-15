@@ -100,7 +100,7 @@ function ResultContent() {
                 console.error('Error checking saved status:', error);
                 return;
             }
-            
+
             setIsSaved(!!data);
         } catch (err) {
             console.error('Unexpected error:', err);

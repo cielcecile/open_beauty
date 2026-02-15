@@ -19,11 +19,13 @@ import FAQAccordion from '@/components/hospital/FAQAccordion';
 import ReviewList from '@/components/hospital/ReviewList';
 import BookingSection from '@/components/hospital/BookingSection';
 import HospitalChatBot from '@/components/hospital/HospitalChatBot';
+import { useAuth } from '@/context/AuthContext';
 import styles from './hospital-detail.module.css';
 
 export default function HospitalDetailPage() {
     const params = useParams();
     const id = params?.id as string;
+    const { user } = useAuth();
 
     const [hospital, setHospital] = useState<Hospital | null>(null);
     const [pricing, setPricing] = useState<PricingItem[]>([]);
@@ -121,7 +123,10 @@ export default function HospitalDetailPage() {
 
             {/* 6. Hospital-specific ChatBot (floating) */}
             {chatbotConfig && (
-                <HospitalChatBot config={chatbotConfig} hospitalName={hospital.name} />
+                <HospitalChatBot
+                    config={{ ...chatbotConfig, user_id: user?.id }}
+                    hospitalName={hospital.name}
+                />
             )}
         </div>
     );

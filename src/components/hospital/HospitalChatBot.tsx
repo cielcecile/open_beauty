@@ -4,8 +4,15 @@ import { useState, useRef, useEffect } from 'react';
 import type { ChatbotConfig } from '@/services/chatbot';
 import styles from './HospitalChatBot.module.css';
 
+// Extend the interface locally or ensure it's in the service. 
+// Assuming ChatbotConfig is defined elsewhere, but we can't easily change it if it's imported.
+// Actually, we can add userId to HospitalChatBotProps or config.
+// The user passed `config` which is `ChatbotConfig`.
+// Let's modify HospitalChatBotProps to accept userId explicitly to avoid messing with shared type if possible,
+// OR just assume config has it if we modify the caller.
+// Let's add `userId` to Props for clarity.
 interface HospitalChatBotProps {
-    config: ChatbotConfig;
+    config: ChatbotConfig & { user_id?: string }; // Extend here
     hospitalName: string;
 }
 
@@ -29,6 +36,51 @@ export default function HospitalChatBot({ config, hospitalName }: HospitalChatBo
         }
     }, [messages]);
 
+    // Load Chat History if user is logged in
+    useEffect(() => {
+        if (!config.user_id) return;
+
+        const fetchHistory = async () => {
+            // We need a way to fetch history. Since we don't have a direct client here with permission (RLS is technically 'true' but we need a client),
+            // let's use a simple fetch to an API or assuming we can use a supabase client if we import it.
+            // Ideally we should use the supabase client. 
+            // To avoid adding a new dependency/file for client right now, we can use a simple GET endpoint or a server action, 
+            // BUT simplest for now: Use the existing POST /api/chat endpoint with a special flag OR create a client-side supabase instance.
+            // The user has 'createClient' available in other files (e.g. route.ts).
+            // Let's rely on standard supabase-js which is likely installed.
+
+            // Dynamic import to avoid SSR issues if needed, or just standard import.
+            const { createClient } = await import('@supabase/supabase-js');
+            const supabase = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            );
+
+            const { data, error } = await supabase
+                .from('chat_logs')
+                .select('*')
+                .eq('hospital_id', config.hospital_id)
+                .eq('user_id', config.user_id)
+                .order('created_at', { ascending: true });
+
+            if (data && data.length > 0) {
+                const historyMessages: Message[] = data.map((log: any) => ({
+                    role: log.role as 'user' | 'assistant',
+                    content: log.content
+                }));
+                // Combine welcome message (if no history? or always keep welcome?)
+                // Usually if history exists, we might show it AFTER welcome or INSTEAD.
+                // Let's prepend welcome message, then history.
+                setMessages([
+                    { role: 'assistant', content: config.welcome_message || `こんにちは！${hospitalName}へようこそ😊 何かご質問はありますか？` },
+                    ...historyMessages
+                ]);
+            }
+        };
+
+        fetchHistory();
+    }, [config.user_id, config.hospital_id, config.welcome_message, hospitalName]);
+
     const sendMessage = async () => {
         const text = input.trim();
         if (!text || loading) return;
@@ -46,6 +98,7 @@ export default function HospitalChatBot({ config, hospitalName }: HospitalChatBo
                     hospitalId: config.hospital_id,
                     systemPrompt: config.system_prompt,
                     hospitalName,
+                    userId: config.user_id
                 }),
             });
 

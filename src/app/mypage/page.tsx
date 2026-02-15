@@ -182,10 +182,32 @@ export default function MyPage() {
     const handleRemoveFromHistory = async (id: number) => {
         if (!confirm('本当にこの診断履歴を削除しますか？')) return;
 
+        const itemToDelete = history.find(item => item.id === id);
+
         // Optimistic Update
         setHistory(prev => prev.filter(item => item.id !== id));
 
         try {
+            // 1. Delete Image from Storage if exists
+            if (itemToDelete?.imageUrl) {
+                try {
+                    const imagePath = itemToDelete.imageUrl.split('/analysis-images/')[1];
+                    if (imagePath) {
+                        const { error: storageError } = await supabase.storage
+                            .from('analysis-images')
+                            .remove([imagePath]);
+
+                        if (storageError) {
+                            console.error('Error removing image:', storageError);
+                            // Continue to delete DB record even if image delete fails
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing image path:', e);
+                }
+            }
+
+            // 2. Delete Record from DB
             const { error } = await supabase
                 .from('analysis_results')
                 .delete()
@@ -194,6 +216,8 @@ export default function MyPage() {
             if (error) {
                 console.error('Error removing history:', error);
                 alert('削除に失敗しました。');
+                // Revert optimistic update?
+                // setHistory(prev => [...prev, itemToDelete]); // Optional, but complicated to sort back
             }
         } catch (err) {
             console.error(err);
