@@ -340,6 +340,32 @@ export default function HospitalsManager() {
             CLINIC_CATEGORIES.find(c => c.id === category)?.label || category;
     };
 
+    // --- INGEST (AI Update) ---
+    const [ingestingId, setIngestingId] = useState<string | null>(null);
+
+    const handleIngest = async (hospitalId: string, hospitalName: string) => {
+        if (!confirm(`'${hospitalName}'의 AI 지식을 최신 데이터로 업데이트하시겠습니까?`)) return;
+
+        setIngestingId(hospitalId);
+        try {
+            const res = await fetch('/api/admin/ingest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hospitalId }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Failed');
+
+            alert(`✅ '${hospitalName}' AI 학습 완료! (${data.chunksProcessed} chunks)`);
+        } catch (err) {
+            console.error('Ingest failed:', err);
+            alert('❌ AI 학습 중 오류가 발생했습니다.');
+        } finally {
+            setIngestingId(null);
+        }
+    };
+
     // ===================== REGISTER / EDIT VIEW =====================
     if (view === 'REGISTER') {
         return (
@@ -348,10 +374,20 @@ export default function HospitalsManager() {
                     <h2 className={styles.pageTitle}>{formData.id ? '🏥 病院情報修正' : '🏥 新規病院/クリニック登録'}</h2>
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         {formData.id && (
-                            <button
-                                className={styles.btnDanger}
-                                onClick={() => { handleDelete(formData.id!); }}
-                            >🗑️ 削除</button>
+                            <>
+                                <button
+                                    className={styles.btnPrimary}
+                                    onClick={() => handleIngest(formData.id!, formData.name || 'Hospital')}
+                                    disabled={!!ingestingId}
+                                    style={{ background: '#7c3aed', borderColor: '#7c3aed' }}
+                                >
+                                    {ingestingId === formData.id ? 'AI学習中...' : '🤖 AI 지식 업데이트'}
+                                </button>
+                                <button
+                                    className={styles.btnDanger}
+                                    onClick={() => { handleDelete(formData.id!); }}
+                                >🗑️ 削除</button>
+                            </>
                         )}
                         <button className={styles.btnSecondary} onClick={resetAndBack}>キャンセル</button>
                     </div>
@@ -438,8 +474,20 @@ export default function HospitalsManager() {
 
                     {/* Chatbot Settings */}
                     <section className={styles.card} style={{ border: '1px solid var(--admin-primary-light)', background: 'rgba(99, 102, 241, 0.03)', boxShadow: 'none' }}>
-                        <h4 className={styles.cardTitle} style={{ color: 'var(--admin-primary)', fontSize: '1.15rem' }}>🤖 チャットボット設定</h4>
-                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 className={styles.cardTitle} style={{ color: 'var(--admin-primary)', fontSize: '1.15rem', margin: 0 }}>🤖 チャットボット設定</h4>
+                            {formData.id && (
+                                <button
+                                    className={styles.btnPrimary}
+                                    style={{ fontSize: '0.9rem', padding: '6px 12px', background: '#7c3aed', borderColor: '#7c3aed' }}
+                                    onClick={() => handleIngest(formData.id!, formData.name || 'Hospital')}
+                                    disabled={!!ingestingId}
+                                >
+                                    {ingestingId === formData.id ? 'AI学習中...' : '↻ AI 지식 업데이트'}
+                                </button>
+                            )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', marginTop: '1rem' }}>
                             <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
                                 <input
                                     type="checkbox"
@@ -477,6 +525,8 @@ export default function HospitalsManager() {
                                 <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #eee' }}>
                                     <p style={{ fontSize: '1rem', color: '#666', margin: 0 }}>
                                         💡 <strong>자동 학습:</strong> 등록된 「시술 가격표」와 「FAQ」는 챗봇이 자동으로 참조합니다.
+                                        <br />
+                                        내용을 수정한 뒤에는 반드시 상단의 <strong>[AI 지식 업데이트]</strong> 버튼을 눌러주세요.
                                     </p>
                                 </div>
                             </div>
@@ -619,7 +669,7 @@ export default function HospitalsManager() {
                                     <th className={styles.th} style={{ minWidth: '400px' }}>病院/クリニック情報</th>
                                     <th className={styles.th} style={{ width: '120px', textAlign: 'center' }}>価格表</th>
                                     <th className={styles.th} style={{ width: '120px', textAlign: 'center' }}>FAQ</th>
-                                    <th className={styles.th} style={{ width: '150px', textAlign: 'right' }}>管理</th>
+                                    <th className={styles.th} style={{ width: '220px', textAlign: 'right' }}>管理</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -654,13 +704,26 @@ export default function HospitalsManager() {
                                         <td className={styles.td} style={{ textAlign: 'center', fontWeight: '600', color: 'var(--admin-text-muted)' }}>-</td>
                                         <td className={styles.td} style={{ textAlign: 'center', fontWeight: '600', color: 'var(--admin-text-muted)' }}>-</td>
                                         <td className={styles.td} style={{ textAlign: 'right' }}>
-                                            <button
-                                                className={styles.actionBtn}
-                                                style={{ padding: '10px 20px', fontWeight: '700' }}
-                                                onClick={() => {
-                                                    router.push(`/admin/hospitals?mode=edit&id=${hospital.id}`);
-                                                }}
-                                            >修正</button>
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <button
+                                                    className={styles.actionBtn}
+                                                    style={{ padding: '10px 14px', fontWeight: '600', background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe' }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleIngest(hospital.id, hospital.name);
+                                                    }}
+                                                    disabled={!!ingestingId}
+                                                >
+                                                    {ingestingId === hospital.id ? '...' : '🤖 AI 학습'}
+                                                </button>
+                                                <button
+                                                    className={styles.actionBtn}
+                                                    style={{ padding: '10px 20px', fontWeight: '700' }}
+                                                    onClick={() => {
+                                                        router.push(`/admin/hospitals?mode=edit&id=${hospital.id}`);
+                                                    }}
+                                                >修正</button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
