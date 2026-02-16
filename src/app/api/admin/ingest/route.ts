@@ -3,20 +3,27 @@ import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { isAdminEmail } from '@/lib/admin';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const geminiApiKey = process.env.GEMINI_API_KEY;
+function getConfig() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey || !geminiApiKey) {
-  throw new Error('Missing required environment variables for admin ingest route.');
+  if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey || !geminiApiKey) {
+    throw new Error('Missing required environment variables for admin ingest route.');
+  }
+
+  return { supabaseUrl, supabaseServiceKey, supabaseAnonKey, geminiApiKey };
 }
 
-const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
-const authSupabase = createClient(supabaseUrl, supabaseAnonKey);
-
-const genAI = new GoogleGenerativeAI(geminiApiKey);
-const embeddingModel = genAI.getGenerativeModel({ model: 'models/gemini-embedding-001' });
+function getClients() {
+  const { supabaseUrl, supabaseServiceKey, supabaseAnonKey, geminiApiKey } = getConfig();
+  const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+  const authSupabase = createClient(supabaseUrl, supabaseAnonKey);
+  const genAI = new GoogleGenerativeAI(geminiApiKey);
+  const embeddingModel = genAI.getGenerativeModel({ model: 'models/gemini-embedding-001' });
+  return { serviceSupabase, authSupabase, embeddingModel };
+}
 
 interface HospitalRow {
   id: string;
@@ -43,7 +50,7 @@ interface ReviewRow {
   content: string;
 }
 
-async function generateEmbedding(text: string): Promise<number[] | null> {
+async function generateEmbedding(embeddingModel: ReturnType<GoogleGenerativeAI['getGenerativeModel']>, text: string): Promise<number[] | null> {
   try {
     const result = await embeddingModel.embedContent(text);
     return result.embedding.values;
@@ -54,7 +61,7 @@ async function generateEmbedding(text: string): Promise<number[] | null> {
   }
 }
 
-async function requireAdmin(request: Request): Promise<NextResponse | null> {
+async function requireAdmin(authSupabase: any, request: Request): Promise<NextResponse | null> {
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -78,7 +85,8 @@ async function requireAdmin(request: Request): Promise<NextResponse | null> {
 }
 
 export async function POST(req: Request) {
-  const authFailure = await requireAdmin(req);
+  const { serviceSupabase, authSupabase, embeddingModel } = getClients();
+  const authFailure = await requireAdmin(authSupabase, req);
   if (authFailure) return authFailure;
 
   try {
@@ -144,7 +152,7 @@ export async function POST(req: Request) {
 
     let successCount = 0;
     for (const chunk of knowledgeChunks) {
-      const embedding = await generateEmbedding(chunk);
+      const embedding = await generateEmbedding(embeddingModel, chunk);
       if (!embedding) continue;
 
       await serviceSupabase.from('hospital_knowledge').insert({
