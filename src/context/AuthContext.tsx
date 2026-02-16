@@ -51,14 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const getURL = () => {
+        // Use window.location.origin for client-side to always match the current domain
+        if (typeof window !== 'undefined') {
+            const origin = window.location.origin;
+            return origin.endsWith('/') ? origin : `${origin}/`;
+        }
+        // Server-side fallback
         let url =
-            process?.env?.NEXT_PUBLIC_SITE_URL ?? // Custom base URL
-            process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set on Vercel
-            'http://localhost:3000/';
-        // Make sure to include `https://` when not localhost
+            process?.env?.NEXT_PUBLIC_SITE_URL ??
+            process?.env?.NEXT_PUBLIC_VERCEL_URL ??
+            'https://open-beauty.vercel.app';
         url = url.includes('http') ? url : `https://${url}`;
-        // Make sure to include a trailing slash
-        url = url.charAt(url.length - 1) === '/' ? url : `${url}/`;
+        url = url.endsWith('/') ? url : `${url}/`;
         return url;
     };
 
