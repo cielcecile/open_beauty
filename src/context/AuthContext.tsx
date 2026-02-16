@@ -51,19 +51,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const getURL = () => {
-        // Use window.location.origin for client-side to always match the current domain
+        let url = 'https://open-beauty.vercel.app';
+
         if (typeof window !== 'undefined') {
+            // 클라이언트 사이드에서는 현재 접속 중인 origin을 우선 사용
             const origin = window.location.origin;
-            return origin.endsWith('/') ? origin : `${origin}/`;
+            if (!origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+                url = origin;
+            } else {
+                url = origin;
+            }
+        } else {
+            // 서버 사이드 폴백
+            if (process.env.NEXT_PUBLIC_SITE_URL) {
+                url = process.env.NEXT_PUBLIC_SITE_URL;
+            } else if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+                url = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+            }
         }
-        // Server-side fallback
-        let url =
-            process?.env?.NEXT_PUBLIC_SITE_URL ??
-            process?.env?.NEXT_PUBLIC_VERCEL_URL ??
-            'https://open-beauty.vercel.app';
-        url = url.includes('http') ? url : `https://${url}`;
-        url = url.endsWith('/') ? url : `${url}/`;
-        return url;
+
+        // 끝에 슬래시 처리 (Supabase 설정과 일치시키기 위해)
+        return url.endsWith('/') ? url : `${url}/`;
     };
 
     const signInWithProvider = useCallback(async (provider: 'google' | 'kakao') => {
