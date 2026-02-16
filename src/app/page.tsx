@@ -20,7 +20,7 @@ export default function Home() {
         </p>
 
         <Link href="/analysis" className={styles.visionButton}>
-          <span className={styles.btnIcon}>AI</span>
+          <span className={styles.btnIcon}>✨</span>
           <span className={styles.btnText}>AI美容分析をはじめる</span>
           <span className={styles.btnSubtext}>画像アップロードで結果を確認</span>
         </Link>
@@ -30,14 +30,14 @@ export default function Home() {
             title="ビューティータイプ診断"
             description="5つの質問で肌タイプを簡単にチェック"
             href="/quiz/beauty-type"
-            icon="Q1"
+            icon="💄"
             gradient="linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)"
           />
           <QuizBanner
             title="K-Beautyスタイル診断"
             description="あなたに合うK-Beauty施術の方向性を提案"
             href="/quiz/k-beauty"
-            icon="Q2"
+            icon="🌸"
             gradient="linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)"
           />
         </div>

@@ -9,11 +9,11 @@ import styles from './packages.module.css';
 type Category = 'FLIGHT' | 'HOTEL' | 'TOUR' | 'ESIM' | 'WIFI';
 
 const CATEGORIES: { id: Category; label: string; icon: string }[] = [
-  { id: 'FLIGHT', label: '航空券', icon: 'FL' },
-  { id: 'HOTEL', label: 'ホテル', icon: 'HT' },
-  { id: 'TOUR', label: 'ツアー', icon: 'TR' },
-  { id: 'ESIM', label: 'eSIM', icon: 'ES' },
-  { id: 'WIFI', label: 'Wi-Fi', icon: 'WF' },
+  { id: 'FLIGHT', label: '航空券', icon: '✈️' },
+  { id: 'HOTEL', label: 'ホテル', icon: '🏨' },
+  { id: 'TOUR', label: 'ツアー', icon: '🗺️' },
+  { id: 'ESIM', label: 'eSIM', icon: '📱' },
+  { id: 'WIFI', label: 'Wi-Fi', icon: '📶' },
 ];
 
 interface AffiliateItem {

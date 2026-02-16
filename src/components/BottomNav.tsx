@@ -7,12 +7,12 @@ import { useChat } from '@/context/ChatContext';
 import { useAuth } from '@/context/AuthContext';
 
 const NAV_ITEMS = [
-  { label: 'ホーム', href: '/', icon: 'HM', type: 'link' },
-  { label: 'AI分析', href: '/analysis', icon: 'AI', type: 'link' },
-  { label: 'クリニック', href: '/hospitals', icon: 'CL', type: 'link' },
-  { label: 'メニュー', href: '/packages', icon: 'PK', type: 'link' },
-  { label: 'マイ', href: '/mypage', icon: 'MY', type: 'link' },
-  { label: 'AI相談', href: '#chat', icon: 'CH', type: 'button' },
+  { label: 'ホーム', href: '/', icon: '🏠', type: 'link' },
+  { label: 'AI分析', href: '/analysis', icon: '✨', type: 'link' },
+  { label: 'クリニック', href: '/hospitals', icon: '🏥', type: 'link' },
+  { label: 'メニュー', href: '/packages', icon: '💎', type: 'link' },
+  { label: 'マイ', href: '/mypage', icon: '👤', type: 'link' },
+  { label: 'AI相談', href: '#chat', icon: '💬', type: 'button' },
 ] as const;
 
 export default function BottomNav() {
