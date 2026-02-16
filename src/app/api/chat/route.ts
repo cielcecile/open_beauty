@@ -12,8 +12,7 @@ if (!geminiApiKey || !supabaseUrl || !supabaseServiceKey) {
 }
 
 const genAI = new GoogleGenerativeAI(geminiApiKey);
-// Using gemini-1.5-flash which is generally available and fast
-const chatModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const candidateChatModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 const embeddingModel = genAI.getGenerativeModel({ model: 'models/text-embedding-004' });
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -107,22 +106,22 @@ export async function POST(req: Request) {
     const promptWithContext = `${finalSystemPrompt}\n\nUser Question: ${message}`;
 
     let text = '';
-    try {
-      const result = await chatModel.generateContent(promptWithContext);
-      text = await result.response.text();
-    } catch (firstError) {
-      const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-      await wait(1500);
+    for (const modelName of candidateChatModels) {
       try {
-        const retryResult = await chatModel.generateContent(promptWithContext);
-        text = await retryResult.response.text();
-      } catch (retryError) {
-        console.error('Chat generation failed:', firstError, retryError);
-        return NextResponse.json(
-          { reply: '現在、回答の生成に問題が発生しています。しばらくしてからもう一度お試しください。' },
-          { status: 503 }
-        );
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(promptWithContext);
+        text = await result.response.text();
+        break;
+      } catch (err) {
+        console.error(`Chat model ${modelName} failed:`, err);
       }
+    }
+
+    if (!text) {
+      return NextResponse.json(
+        { reply: '現在、回答の生成に問題が発生しています。しばらくしてからもう一度お試しください。' },
+        { status: 503 }
+      );
     }
 
     // Save chat logs asynchronously
