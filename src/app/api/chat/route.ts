@@ -1,169 +1,157 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, getRequestIdentifier } from '@/lib/rate-limit';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-// For Chat, we use the model verified to work: gemini-flash-latest
-const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-const embeddingModel = genAI.getGenerativeModel({ model: "models/gemini-embedding-001" });
+const geminiApiKey = process.env.GEMINI_API_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+if (!geminiApiKey || !supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing required environment variables for /api/chat');
+}
+
+const genAI = new GoogleGenerativeAI(geminiApiKey);
+// Using gemini-1.5-flash which is generally available and fast
+const chatModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const embeddingModel = genAI.getGenerativeModel({ model: 'models/text-embedding-004' });
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+type ChatHistoryMessage = {
+  role: 'user' | 'model';
+  parts: Array<{ text: string }>;
+};
+
+type ChatRequestBody = {
+  message?: string;
+  hospitalId?: string;
+  systemPrompt?: string;
+  hospitalName?: string;
+  history?: ChatHistoryMessage[];
+  userId?: string;
+};
+
+type MatchKnowledgeRow = {
+  content: string;
+};
+
+function sanitizeHistory(history: ChatHistoryMessage[] | undefined): ChatHistoryMessage[] {
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter((item) => item && (item.role === 'user' || item.role === 'model'))
+    .slice(-10)
+    .map((item) => ({
+      role: item.role,
+      parts: Array.isArray(item.parts) ? item.parts.slice(0, 2) : [],
+    }));
+}
 
 export async function POST(req: Request) {
-    try {
-        const body = await req.json();
-        const { message, hospitalId, systemPrompt, hospitalName, history, userId } = body;
+  const identifier = getRequestIdentifier(req);
+  // Rate limit: 30 requests per minute
+  const limit = await checkRateLimit('api-chat', identifier, 30, 60_000);
 
-        if (!message) {
-            return NextResponse.json({ reply: "メッセージを入力してください。" });
-        }
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { reply: 'リクエストが多すぎます。しばらくしてからもう一度お試しください。' },
+      { status: 429, headers: { 'Retry-After': Math.ceil(limit.retryAfterMs / 1000).toString() } }
+    );
+  }
 
-        let contextText = "";
+  try {
+    const body = (await req.json()) as ChatRequestBody;
+    const message = body.message?.trim();
 
-        // RAG: If hospitalId is provided, search for relevant info
-        if (hospitalId) {
-            try {
-                // 1. Generate Embedding for user query
-                const embeddingResult = await embeddingModel.embedContent(message);
-                const queryEmbedding = embeddingResult.embedding.values;
+    if (!message) {
+      return NextResponse.json({ reply: 'メッセージを入力してください。' }, { status: 400 });
+    }
 
-                // 2. Search in Supabase (RPC call)
-                const { data: products, error } = await supabase.rpc('match_hospital_knowledge', {
-                    query_embedding: queryEmbedding,
-                    match_threshold: 0.5, // Similarity threshold
-                    match_count: 5,        // Top 5 relevant chunks
-                    filter_hospital_id: hospitalId
-                });
+    if (message.length > 1000) {
+      return NextResponse.json({ reply: 'メッセージが長すぎます。1000文字以内で入力してください。' }, { status: 400 });
+    }
 
-                if (error) {
-                    console.error("RAG Search Error:", error);
-                } else if (products && products.length > 0) {
-                    contextText = products.map((p: any) => p.content).join("\n\n");
-                    console.log("RAG Context found:", products.length, "chunks");
-                }
-            } catch (e) {
-                console.error("Embedding Error:", e);
-                // Fail gracefully, continue without context
-            }
-        }
+    let contextText = '';
 
-        // Construct System Prompt
-        let finalSystemPrompt = systemPrompt || `あなたは美容クリニックの親切なAIカウンセラーです。`;
+    if (body.hospitalId) {
+      try {
+        const embeddingResult = await embeddingModel.embedContent(message);
+        const queryEmbedding = embeddingResult.embedding.values;
 
-        if (hospitalName) {
-            finalSystemPrompt += ` ${hospitalName}の担当者として振る舞ってください。`;
-        }
-
-        if (contextText) {
-            finalSystemPrompt += `\n\n【参考情報（以下の情報を最優先して回答してください）】\n${contextText}\n\nもし参考情報に答えがない場合は、一般的な美容知識に基づいて丁寧に回答するか、「詳細は病院に直接お問い合わせください」と案内してください。嘘の情報は絶対に作らないでください。\n\n【重要】回答は質問された内容（価格や施術効果など）のみに絞り、簡潔に答えてください。\n\n【禁止事項】\n1. **（アスタリスク2つ）による太字強調は使用しないでください。\n2. 日本円(JPY)への換算はしないでください。価格は韓国ウォン(KRW)のみ表記してください。\n3. 質問されていない場合、病院の場所(アクセス)、予約方法、病院の魅力などの宣伝文句は一切含めないでください。\n4. 挨拶や締めの言葉は最小限にしてください。`;
-        }
-
-        // Add User Message
-        const chat = model.startChat({
-            history: history || [], // Optional: past chat history
-            generationConfig: {
-                maxOutputTokens: 300,
-            },
+        // Note: match_hospital_knowledge function must exist in Supabase
+        const { data, error } = await supabase.rpc('match_hospital_knowledge', {
+          query_embedding: queryEmbedding,
+          match_threshold: 0.5,
+          match_count: 5,
+          filter_hospital_id: body.hospitalId,
         });
 
-        // Send message with system instruction logic
-        // Gemini 2.0 Flash supports system instructions via model config, 
-        // but simple way is to prepend to the first message or use 'sendMessage' with prompt.
-        // For simplicity in this route, we'll act as a stateless turn or simple history.
-
-        // Better approach for RAG + System Prompt in JS SDK:
-        const promptWithContext = `${finalSystemPrompt}\n\nUser Question: ${message}`;
-
-        let text = "";
-
-        // Helper to delay
-        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-        try {
-            // Attempt 1: Primary Model (Gemini Flash Latest)
-            console.log("Attempt 1: Gemini Flash Latest");
-            const result = await model.generateContent(promptWithContext);
-            const response = await result.response;
-            text = response.text();
-
-        } catch (error1: any) {
-            console.warn(`Attempt 1 Failed (${error1.status || error1.message}). Retrying...`);
-
-            // Attempt 2: Retry Primary after 2s delay
-            if (error1.status === 429 || error1.message?.includes('429')) {
-                await delay(2000);
-                try {
-                    console.log("Attempt 2: Gemini Flash Latest (Retry)");
-                    const result = await model.generateContent(promptWithContext);
-                    const response = await result.response;
-                    text = response.text();
-                } catch (error2: any) {
-                    console.warn(`Attempt 2 Failed. Trying Fallback...`);
-
-                    // Attempt 3: Fallback (Gemini Pro Latest) - Only if Flash fails completely
-                    try {
-                        console.log("Attempt 3: Gemini Pro Latest");
-                        const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
-                        const fallbackResult = await fallbackModel.generateContent(promptWithContext);
-                        const fallbackResponse = await fallbackResult.response;
-                        text = fallbackResponse.text();
-                    } catch (error3: any) {
-                        console.error("All Attempts Failed.");
-                        throw error3;
-                    }
-                }
-            } else {
-                throw error1;
-            }
+        if (!error && Array.isArray(data) && data.length > 0) {
+          contextText = (data as MatchKnowledgeRow[]).map((row) => row.content).join('\n\n');
         }
-
-
-
-        // --- Save to Chat Logs (Async) ---
-        // We don't await this to keep response fast
-        (async () => {
-            try {
-                if (!hospitalId) return;
-
-                const { error: logError } = await supabase.from('chat_logs').insert([
-                    // User Query
-                    {
-                        hospital_id: hospitalId,
-                        user_id: userId || null,
-                        role: 'user',
-                        content: message
-                    },
-                    // AI Response
-                    {
-                        hospital_id: hospitalId,
-                        user_id: userId || null,
-                        role: 'assistant',
-                        content: text
-                    }
-                ]);
-
-                if (logError) console.error("Failed to save chat logs:", logError);
-                else console.log("Chat logs saved.");
-
-            } catch (err) {
-                console.error("Chat logging error:", err);
-            }
-        })();
-
-        return NextResponse.json({ reply: text });
-
-    } catch (error: any) {
-        console.error('Chat API Error:', error);
-
-        if (error.status === 429 || error.message?.includes('429')) {
-            return NextResponse.json({
-                reply: '申し訳ありません。現在アクセスが集中しており、AIが応答できません。1분 뒤에 다시 시도해주세요. (API Quota Exceeded)'
-            }, { status: 429 });
-        }
-
-        return NextResponse.json({ reply: '申し訳ありません。システムエラーが発生しました。' }, { status: 500 });
+      } catch (error) {
+        console.error('RAG lookup error:', error);
+      }
     }
+
+    let finalSystemPrompt = body.systemPrompt || 'あなたは美容施術相談AIです。正確で親切に案内してください。';
+
+    if (body.hospitalName) {
+      finalSystemPrompt += ` 病院名: ${body.hospitalName}.`;
+    }
+
+    if (contextText) {
+      finalSystemPrompt += `\n\n病院情報:\n${contextText}\n\n上記の情報に基づいて質問に正確に回答してください。`;
+    }
+
+    const promptWithContext = `${finalSystemPrompt}\n\nUser Question: ${message}`;
+
+    let text = '';
+    try {
+      const result = await chatModel.generateContent(promptWithContext);
+      text = await result.response.text();
+    } catch (firstError) {
+      const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+      await wait(1500);
+      try {
+        const retryResult = await chatModel.generateContent(promptWithContext);
+        text = await retryResult.response.text();
+      } catch (retryError) {
+        console.error('Chat generation failed:', firstError, retryError);
+        return NextResponse.json(
+          { reply: '現在、回答の生成に問題が発生しています。しばらくしてからもう一度お試しください。' },
+          { status: 503 }
+        );
+      }
+    }
+
+    // Save chat logs asynchronously
+    (async () => {
+      try {
+        if (!body.hospitalId) return;
+
+        await supabase.from('chat_logs').insert([
+          {
+            hospital_id: body.hospitalId,
+            user_id: body.userId || null,
+            role: 'user',
+            content: message,
+          },
+          {
+            hospital_id: body.hospitalId,
+            user_id: body.userId || null,
+            role: 'assistant',
+            content: text,
+          },
+        ]);
+      } catch (error) {
+        console.error('Failed to save chat logs:', error);
+      }
+    })();
+
+    return NextResponse.json({ reply: text });
+  } catch (error) {
+    console.error('Chat API Error:', error);
+    return NextResponse.json({ reply: '一時的なエラーが発生しました。しばらくしてからもう一度お試しください。' }, { status: 500 });
+  }
 }

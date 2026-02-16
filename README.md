@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Open Beauty
 
-## Getting Started
+Open Beauty is a Next.js 16 app for AI skin analysis, clinic discovery, and hospital chat support.
 
-First, run the development server:
+## Stack
+- Next.js (App Router) + React 19 + TypeScript
+- Supabase (Auth, Postgres, Storage, RPC)
+- Gemini API (analysis/chat/embedding)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Local Run
+1. Install dependencies:
+   - `npm install`
+2. Configure environment variables:
+   - copy `.env.example` to `.env.local`
+3. Run dev server:
+   - `npm run dev`
+4. Open:
+   - `http://localhost:3000`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Required Environment Variables
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GEMINI_API_KEY`
+- `ADMIN_EMAILS` (comma-separated)
+- `NEXT_PUBLIC_ADMIN_EMAILS` (comma-separated, same values as ADMIN_EMAILS)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Optional:
+- `ADMIN_API_KEY`
+- `N8N_VISION_WEBHOOK`
+- `N8N_BOOKING_WEBHOOK`
+- `NEXT_PUBLIC_SITE_URL`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Supabase SQL Order
+1. Base tables/schema (`supabase-seed.sql`, `supabase-treatments.sql`, other core SQL)
+2. RAG setup:
+   - `supabase/rag_setup.sql`
+   - `supabase/rag_fix_dimensions.sql`
+3. Chat logs security:
+   - `supabase/chat_logs_setup.sql`
+4. Recommendation cache policy:
+   - `supabase-recommendations.sql`
 
-## Learn More
+## Security Notes
+See `docs/security.md` for admin access control, RLS assumptions, and API hardening notes.
 
-To learn more about Next.js, take a look at the following resources:
+## Quality Check
+- `npm run lint`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+- Ensure all required env vars are set in the deployment environment.
+- Do not run production with mock webhooks disabled variables unless intentionally returning 500 for those integrations.

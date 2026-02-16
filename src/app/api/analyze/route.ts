@@ -1,181 +1,205 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, getRequestIdentifier } from '@/lib/rate-limit';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+const geminiApiKey = process.env.GEMINI_API_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!geminiApiKey || !supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing required environment variables for /api/analyze');
+}
+
+const genAI = new GoogleGenerativeAI(geminiApiKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+type AnalysisData = {
+  faceType: string;
+  skinAge: number;
+  scores: number[];
+  concerns: string[];
+};
+
+type Recommendation = {
+  name: string;
+  category: string;
+  description: string;
+  price_range: string;
+};
+
+type AdviceData = {
+  message: string;
+  recommendations: Recommendation[];
+};
+
+type CachedRecommendationRow = {
+  face_type: string;
+  concerns: string[];
+  recommendations: Recommendation[];
+  advice: string;
+};
+
+function parseJson<T>(text: string): T {
+  const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+  return JSON.parse(cleaned) as T;
+}
+
+function normalizeScores(input: number[]): number[] {
+  if (input.length !== 5) return [50, 50, 50, 50, 50];
+  return input.map((value) => Math.max(0, Math.min(100, Math.round(value))));
+}
 
 export async function POST(req: Request) {
-    console.log("Analyze API called");
-    console.log("API Key present:", !!process.env.GEMINI_API_KEY);
+  const identifier = getRequestIdentifier(req);
+  const limit = checkRateLimit('api-analyze', identifier, 10, 60_000);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again shortly.' },
+      { status: 429, headers: { 'Retry-After': Math.ceil(limit.retryAfterMs / 1000).toString() } }
+    );
+  }
 
-    try {
-        const { image } = await req.json();
+  try {
+    const { image } = (await req.json()) as { image?: string };
 
-        if (!image) {
-            return NextResponse.json({ error: "Image is required" }, { status: 400 });
-        }
-
-        const match = image.match(/^data:(image\/\w+);base64,/);
-        const mimeType = match ? match[1] : "image/jpeg";
-        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
-
-        // Step 1: Vision Analysis
-        // Strategy: Try multiple models in order. Prioritize 2.5 Flash as it was seen in debug output.
-        // 2.0 Flash is also available but hit quota limits (429). 1.5 versions returned 404.
-        const candidateModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
-        let result = null;
-        let lastError = null;
-        let successfulModel = null;
-
-        const visionPrompt = `
-        You are an expert aesthetic dermatologist. Analyze the face in the image and provide a JSON response.
-        
-        Analyze:
-        1. **Face Type**: Choose one from [キュート, アクティブキュート, フレッシュ, クールカジュアル, フェミニン, ソフトエレガント, エレガント, クール, グラマラス, セクシー, ボーイッシュ, 知的]. Can be combined (e.g. "エレガント x クール").
-        2. **Skin Age**: Estimate skin age (integer).
-        3. **Scores** (0-100): Balance, Texture, Clarity, Firmness, Moisture.
-        4. **Concerns**: Identify 1-3 primary concerns from: [たるみ/弾力, シワ, 毛穴/傷跡, シミ/肝斑, ニキビ, 乾燥, 赤み].
-
-        Response Format (JSON ONLY):
-        {
-          "faceType": "String",
-          "skinAge": Integer,
-          "scores": [Integer, Integer, Integer, Integer, Integer],
-          "concerns": ["String", "String"]
-        }
-        `;
-
-        for (const modelName of candidateModels) {
-            try {
-                console.log(`Attempting analysis with model: ${modelName}`);
-                const model = genAI.getGenerativeModel({ model: modelName });
-
-                result = await model.generateContent([
-                    visionPrompt,
-                    { inlineData: { data: base64Data, mimeType: mimeType } },
-                ]);
-
-                if (result) {
-                    console.log(`Success with model: ${modelName}`);
-                    successfulModel = model;
-                    break;
-                }
-            } catch (e: any) {
-                console.warn(`Failed with model ${modelName}:`, e.message);
-                lastError = e;
-                continue;
-            }
-        }
-
-        if (!result || !successfulModel) {
-            throw lastError || new Error("All models failed to generate content.");
-        }
-
-        const response = await result.response;
-        // Clean and parse JSON
-        const text = response.text().replace(/```json/g, "").replace(/```/g, "").trim();
-        const analysisData = JSON.parse(text);
-
-        // Calculate Cache Key
-        const sortedConcerns = (analysisData.concerns || []).sort();
-        const faceType = analysisData.faceType;
-
-        // Step 2: Check Cache (Supabase)
-        let adviceData = null;
-
-        // Attempt to fetch from cache
-        const { data: cached } = await supabase
-            .from('cached_recommendations')
-            .select('*')
-            .eq('face_type', faceType)
-            .contains('concerns', sortedConcerns)
-            .limit(1);
-
-        if (cached && cached.length > 0) {
-            const candidate = cached.find((c: any) => c.concerns.length === sortedConcerns.length);
-            if (candidate) {
-                console.log("Cache Hit! Using DB for advice.");
-                adviceData = {
-                    message: candidate.advice,
-                    recommendations: candidate.recommendations
-                };
-            }
-        }
-
-        // Step 3: If Cache Miss, Generate Advice & Recommendations
-        if (!adviceData) {
-            console.log("Cache Miss. Generating advice...");
-            const advicePrompt = `
-            Based on the analysis:
-            - Face Type: ${faceType}
-            - Concerns: ${sortedConcerns.join(", ")}
-            
-            1. Write a polite, professional advice message (Japanese, ~150 chars).
-            2. Recommend 2-4 specific aesthetic treatments/procedures. 
-            3. For each, provide: Name, Category (Visual/Lift/Skin/etc), Description, and Price Range (KRW/JPY approximation).
-
-            Response Format (JSON ONLY):
-            {
-              "message": "String",
-              "recommendations": [
-                { "name": "String", "category": "String", "description": "String", "price_range": "String" }
-              ]
-            }
-            `;
-
-            const adviceResult = await successfulModel.generateContent(advicePrompt);
-            const adviceText = await adviceResult.response.text();
-            const cleanedAdvice = adviceText.replace(/```json/g, "").replace(/```/g, "").trim();
-            adviceData = JSON.parse(cleanedAdvice);
-
-            // Save to Cache
-            await supabase.from('cached_recommendations').insert({
-                face_type: faceType,
-                concerns: sortedConcerns,
-                recommendations: adviceData.recommendations,
-                advice: adviceData.message
-            });
-
-            // Dynamic Treatments Population
-            if (adviceData.recommendations) {
-                for (const rec of adviceData.recommendations) {
-                    const { data: existing } = await supabase
-                        .from('treatments')
-                        .select('id')
-                        .eq('name', rec.name)
-                        .single();
-
-                    if (!existing) {
-                        await supabase.from('treatments').insert({
-                            // name matches schema
-                            name: rec.name,
-                            category: rec.category,
-                            description: rec.description,
-                            price_range: rec.price_range,
-                            concerns: sortedConcerns
-                        });
-                    }
-                }
-            }
-        }
-
-        // Combine Results
-        const finalResult = {
-            ...analysisData,
-            ...adviceData
-        };
-
-        return NextResponse.json(finalResult);
-
-    } catch (error: any) {
-        console.error("AI Analysis Error:", error);
-        return NextResponse.json({
-            error: "Failed to analyze image",
-            details: error.message || String(error)
-        }, { status: 500 });
+    if (!image || typeof image !== 'string') {
+      return NextResponse.json({ error: 'Image is required' }, { status: 400 });
     }
+
+    if (image.length > 8_000_000) {
+      return NextResponse.json({ error: 'Image payload is too large' }, { status: 413 });
+    }
+
+    const match = image.match(/^data:(image\/\w+);base64,/);
+    if (!match) {
+      return NextResponse.json({ error: 'Unsupported image format' }, { status: 400 });
+    }
+
+    const mimeType = match[1];
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+
+    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+
+    const visionPrompt = `
+You are an expert aesthetic dermatologist.
+Return only JSON with this schema:
+{
+  "faceType": "string",
+  "skinAge": number,
+  "scores": [number, number, number, number, number],
+  "concerns": ["string"]
 }
+Rules:
+- concerns: 1-3 items.
+- scores: 0-100 integers.
+`;
+
+    let analysisText = '';
+    let modelNameUsed = '';
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent([
+          visionPrompt,
+          { inlineData: { data: base64Data, mimeType } },
+        ]);
+        analysisText = await result.response.text();
+        modelNameUsed = modelName;
+        break;
+      } catch { }
+    }
+
+    if (!analysisText || !modelNameUsed) {
+      return NextResponse.json({ error: 'AI analysis is temporarily unavailable' }, { status: 503 });
+    }
+
+    const parsedAnalysis = parseJson<AnalysisData>(analysisText);
+    const concerns = [...(parsedAnalysis.concerns || [])].map((item) => item.trim()).filter(Boolean).sort();
+
+    const analysisData: AnalysisData = {
+      faceType: parsedAnalysis.faceType || 'Balanced',
+      skinAge: Math.max(10, Math.min(90, Math.round(parsedAnalysis.skinAge || 25))),
+      scores: normalizeScores(parsedAnalysis.scores || []),
+      concerns,
+    };
+
+    let adviceData: AdviceData | null = null;
+
+    const { data: cached } = await supabase
+      .from('cached_recommendations')
+      .select('face_type,concerns,recommendations,advice')
+      .eq('face_type', analysisData.faceType)
+      .contains('concerns', concerns)
+      .returns<CachedRecommendationRow[]>();
+
+    if (cached && cached.length > 0) {
+      const exact = cached.find((row) => row.concerns.length === concerns.length);
+      if (exact) {
+        adviceData = {
+          message: exact.advice,
+          recommendations: exact.recommendations,
+        };
+      }
+    }
+
+    if (!adviceData) {
+      const advicePrompt = `
+Based on this analysis:
+- Face type: ${analysisData.faceType}
+- Concerns: ${concerns.join(', ') || 'none'}
+
+Return only JSON:
+{
+  "message": "string",
+  "recommendations": [
+    { "name": "string", "category": "string", "description": "string", "price_range": "string" }
+  ]
+}
+Use Japanese for message and treatment naming when appropriate.
+`;
+
+      const model = genAI.getGenerativeModel({ model: modelNameUsed });
+      const adviceResult = await model.generateContent(advicePrompt);
+      const adviceText = await adviceResult.response.text();
+      adviceData = parseJson<AdviceData>(adviceText);
+
+      await supabase.from('cached_recommendations').insert({
+        face_type: analysisData.faceType,
+        concerns,
+        recommendations: adviceData.recommendations,
+        advice: adviceData.message,
+      });
+
+      for (const rec of adviceData.recommendations || []) {
+        const { data: existing } = await supabase
+          .from('treatments')
+          .select('id')
+          .eq('name', rec.name)
+          .maybeSingle();
+
+        if (!existing) {
+          await supabase.from('treatments').insert({
+            name: rec.name,
+            category: rec.category,
+            description: rec.description,
+            price_range: rec.price_range,
+            concerns,
+          });
+        }
+      }
+    }
+
+    return NextResponse.json({
+      ...analysisData,
+      ...adviceData,
+      model: modelNameUsed,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Analyze API error:', message);
+    return NextResponse.json({ error: 'Failed to analyze image' }, { status: 500 });
+  }
+}
+
+
