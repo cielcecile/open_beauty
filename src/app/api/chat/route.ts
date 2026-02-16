@@ -3,19 +3,22 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, getRequestIdentifier } from '@/lib/rate-limit';
 
-const geminiApiKey = process.env.GEMINI_API_KEY;
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!geminiApiKey || !supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing required environment variables for /api/chat');
-}
-
-const genAI = new GoogleGenerativeAI(geminiApiKey);
 const candidateChatModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
-const embeddingModel = genAI.getGenerativeModel({ model: 'models/text-embedding-004' });
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+function getClients() {
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!geminiApiKey || !supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing required environment variables for /api/chat');
+  }
+
+  const genAI = new GoogleGenerativeAI(geminiApiKey);
+  const embeddingModel = genAI.getGenerativeModel({ model: 'models/text-embedding-004' });
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  return { genAI, embeddingModel, supabase };
+}
 
 type ChatHistoryMessage = {
   role: 'user' | 'model';
@@ -47,6 +50,7 @@ function sanitizeHistory(history: ChatHistoryMessage[] | undefined): ChatHistory
 }
 
 export async function POST(req: Request) {
+  const { genAI, embeddingModel, supabase } = getClients();
   const identifier = getRequestIdentifier(req);
   // Rate limit: 30 requests per minute
   const limit = await checkRateLimit('api-chat', identifier, 30, 60_000);

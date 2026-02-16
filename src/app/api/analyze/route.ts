@@ -3,16 +3,19 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, getRequestIdentifier } from '@/lib/rate-limit';
 
-const geminiApiKey = process.env.GEMINI_API_KEY;
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getClients() {
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!geminiApiKey || !supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing required environment variables for /api/analyze');
+  if (!geminiApiKey || !supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing required environment variables for /api/analyze');
+  }
+
+  const genAI = new GoogleGenerativeAI(geminiApiKey);
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  return { genAI, supabase };
 }
-
-const genAI = new GoogleGenerativeAI(geminiApiKey);
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 type AnalysisData = {
   faceType: string;
@@ -51,6 +54,7 @@ function normalizeScores(input: number[]): number[] {
 }
 
 export async function POST(req: Request) {
+  const { genAI, supabase } = getClients();
   const identifier = getRequestIdentifier(req);
   const limit = checkRateLimit('api-analyze', identifier, 10, 60_000);
   if (!limit.allowed) {
