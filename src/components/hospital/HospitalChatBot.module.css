@@ -1,216 +1,254 @@
+/* HospitalChatBot.module.css */
 .fab {
     position: fixed;
     bottom: 90px;
     right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
+    height: 48px;
+    padding: 0 16px 0 6px;
+    border-radius: 40px;
     background: linear-gradient(135deg, #d4af37, #c9982e);
     color: white;
     border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
     z-index: 900;
-    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: transform 0.2s;
+    gap: 10px;
+    cursor: pointer;
 }
 
-.fab:hover {
-    transform: scale(1.1);
+.fabIcon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: white;
+}
+
+.fabLabel {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
 .chatWindow {
     position: fixed;
-    bottom: 160px;
+    bottom: 155px;
     right: 20px;
-    width: 340px;
-    max-height: 480px;
+    width: 350px;
+    height: 540px;
+    max-height: calc(100vh - 200px);
     background: white;
     border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
     z-index: 901;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .chatHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 1rem;
-    background: linear-gradient(135deg, #d4af37, #c9982e);
+    padding: 1.25rem;
+    background: linear-gradient(135deg, #1a1a1a, #333);
     color: white;
-}
-
-.chatHeaderInfo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 12px;
+    position: relative;
 }
 
-.chatAvatar {
-    font-size: 1.5rem;
+.yunaAvatarMini {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fff;
+    border: 2px solid #d4af37;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.headerInfo {
+    flex: 1;
 }
 
 .chatName {
-    font-size: 0.85rem;
-    font-weight: 700;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #f1f1f1;
 }
 
-.chatStatus {
-    font-size: 0.7rem;
-    opacity: 0.8;
+.hospitalOwner {
+    font-size: 0.72rem;
+    color: #d4af37;
+    font-weight: 600;
+}
+
+.onlineStatus {
+    font-size: 0.65rem;
+    color: #4ade80;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
 }
 
 .chatClose {
-    background: none;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     color: white;
-    font-size: 1.2rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    padding: 4px;
+    font-size: 1.2rem;
 }
 
 .chatMessages {
     flex: 1;
-    padding: 1rem;
+    padding: 1.25rem;
     overflow-y: auto;
-    max-height: 320px;
+    background: #fdfaf5;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    background: #fdfaf5;
+    gap: 1rem;
 }
 
 .msgRow {
     display: flex;
-}
-
-.msgUser {
-    justify-content: flex-end;
+    width: 100%;
 }
 
 .msgBot {
     justify-content: flex-start;
 }
 
-.msgBubble {
-    max-width: 80%;
-    padding: 0.6rem 1rem;
-    border-radius: 16px;
-    font-size: 0.83rem;
-    line-height: 1.6;
-    word-break: break-word;
-    white-space: pre-wrap;
+.msgUser {
+    justify-content: flex-end;
 }
 
-.msgUser .msgBubble {
-    background: linear-gradient(135deg, #d4af37, #c9982e);
-    color: white;
-    border-bottom-right-radius: 4px;
+.msgBubble {
+    max-width: 85%;
+    padding: 0.8rem 1rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
 }
 
 .msgBot .msgBubble {
     background: white;
     color: #333;
+    border-radius: 20px 20px 20px 4px;
     border: 1px solid #eee;
-    border-bottom-left-radius: 4px;
 }
 
-.typing {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 0.8rem 1.2rem;
-}
-
-.typing span {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #ccc;
-    animation: typingDot 1.2s infinite;
-}
-
-.typing span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.typing span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes typingDot {
-
-    0%,
-    80%,
-    100% {
-        opacity: 0.3;
-    }
-
-    40% {
-        opacity: 1;
-    }
+.msgUser .msgBubble {
+    background: linear-gradient(135deg, #d4af37, #c9982e);
+    color: white;
+    border-radius: 20px 20px 4px 20px;
 }
 
 .chatInput {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.8rem;
-    border-top: 1px solid #eee;
+    padding: 1rem;
     background: white;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 8px;
 }
 
 .chatInput input {
     flex: 1;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-family: inherit;
+    padding: 12px 16px;
+    border: 1px solid #e5e5e5;
+    border-radius: 30px;
+    font-size: 0.9rem;
     outline: none;
+    transition: all 0.2s;
 }
 
 .chatInput input:focus {
     border-color: #d4af37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 
 .chatInput button {
-    padding: 8px 16px;
     background: #d4af37;
     color: white;
     border: none;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 0 1.25rem;
+    border-radius: 30px;
     font-weight: 700;
+    font-size: 0.85rem;
     cursor: pointer;
-    font-family: inherit;
-    white-space: nowrap;
 }
 
 .chatInput button:disabled {
     opacity: 0.5;
-    cursor: not-allowed;
+    background: #ccc;
+}
+
+.dotFlashing {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+}
+
+.dotFlashing::after,
+.dotFlashing::before,
+.dotFlashing div {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ccc;
+    animation: flash 1s infinite alternate;
+}
+
+.dotFlashing::before {
+    animation-delay: 0s;
+}
+
+.dotFlashing div {
+    animation-delay: 0.3s;
+}
+
+.dotFlashing::after {
+    animation-delay: 0.6s;
+}
+
+@keyframes flash {
+    from {
+        opacity: 0.3;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @media (max-width: 480px) {
     .chatWindow {
-        right: 8px;
-        left: 8px;
-        bottom: 140px;
+        right: 15px;
+        left: 15px;
         width: auto;
-        max-height: 420px;
-    }
-
-    .fab {
-        bottom: 80px;
-        right: 16px;
-        width: 50px;
-        height: 50px;
-        font-size: 1.3rem;
+        bottom: 140px;
     }
 }
