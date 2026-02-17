@@ -1,19 +1,28 @@
 ﻿'use client';
 
 import { useEffect } from 'react';
-import styles from '@/app/admin/admin.module.css';
+import { Card, Row, Col, Statistic, Table, Tag, Typography } from 'antd';
+import {
+  UserOutlined,
+  CalendarOutlined,
+  DollarOutlined,
+  RiseOutlined,
+  ArrowUpOutlined
+} from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 const STATS = [
-  { label: '本日の訪問数', value: '1,284', change: '+12%' },
-  { label: '予約件数', value: '856', change: '+8%' },
-  { label: '売上合計', value: '12,450,000 KRW', change: '+24%' },
-  { label: '平均予約単価', value: '14,500 KRW', change: '+5%' },
+  { label: '本日の訪問数', value: 1284, change: 12, icon: <UserOutlined />, color: '#1890ff' },
+  { label: '予約件数', value: 856, change: 8, icon: <CalendarOutlined />, color: '#52c41a' },
+  { label: '売上合計', value: 12450000, change: 24, icon: <DollarOutlined />, color: '#faad14' },
+  { label: '平均予約単価', value: 14500, change: 5, icon: <RiseOutlined />, color: '#722ed1' },
 ];
 
 const RESERVATIONS = [
-  { id: '1', hospital: 'Aureum Clinic', patient: 'Sato Yuki', date: '2026-02-14 14:00', service: 'Lifting 300shot', amount: '350,000 KRW', status: '予約確定' },
-  { id: '2', hospital: 'Lienjang', patient: 'Tanaka Mei', date: '2026-02-15 10:30', service: 'Nose Filler', amount: '1,200,000 KRW', status: '保留中' },
-  { id: '3', hospital: 'White Dental', patient: 'Ito Hana', date: '2026-02-15 16:00', service: 'Whitening', amount: '150,000 KRW', status: '完了' },
+  { key: '1', hospital: 'Aureum Clinic', patient: 'Sato Yuki', date: '2026-02-14 14:00', service: 'Lifting 300shot', amount: '350,000 KRW', status: '予約確定' },
+  { key: '2', hospital: 'Lienjang', patient: 'Tanaka Mei', date: '2026-02-15 10:30', service: 'Nose Filler', amount: '1,200,000 KRW', status: '保留中' },
+  { key: '3', hospital: 'White Dental', patient: 'Ito Hana', date: '2026-02-15 16:00', service: 'Whitening', amount: '150,000 KRW', status: '完了' },
 ];
 
 export default function AdminDashboard() {
@@ -21,54 +30,65 @@ export default function AdminDashboard() {
     document.title = 'ダッシュボード | Open Beauty 管理者';
   }, []);
 
-  return (
-    <div style={{ padding: '0 0.5rem' }}>
-      <div className={styles.statsGrid}>
-        {STATS.map((stat) => (
-          <div key={stat.label} className={styles.card} style={{ margin: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <strong>{stat.label}</strong>
-              <span className={styles.badge}>{stat.change}</span>
-            </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800 }}>{stat.value}</div>
-          </div>
-        ))}
-      </div>
+  const columns = [
+    { title: 'ID', dataIndex: 'key', key: 'key', render: (text: string) => `#${text}` },
+    { title: 'クリニック', dataIndex: 'hospital', key: 'hospital', render: (text: string) => <Text strong>{text}</Text> },
+    { title: '患者', dataIndex: 'patient', key: 'patient' },
+    { title: '日時', dataIndex: 'date', key: 'date' },
+    { title: '施術', dataIndex: 'service', key: 'service' },
+    { title: '金額', dataIndex: 'amount', key: 'amount' },
+    {
+      title: '状態',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        let color = 'default';
+        if (status === '予約確定') color = 'processing';
+        if (status === '完了') color = 'success';
+        if (status === '保留中') color = 'warning';
+        return <Tag color={color}>{status}</Tag>;
+      }
+    },
+  ];
 
-      <div className={styles.tableContainer}>
-        <div className={styles.tableControls} style={{ background: '#fff', padding: '1.5rem 2rem' }}>
-          <h2 className={styles.cardTitle} style={{ margin: 0 }}>最新予約一覧</h2>
-        </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.th}>ID</th>
-                <th className={styles.th}>クリニック</th>
-                <th className={styles.th}>患者</th>
-                <th className={styles.th}>日時</th>
-                <th className={styles.th}>施術</th>
-                <th className={styles.th}>金額</th>
-                <th className={styles.th}>状態</th>
-              </tr>
-            </thead>
-            <tbody>
-              {RESERVATIONS.map((row) => (
-                <tr key={row.id}>
-                  <td className={styles.td}>#{row.id}</td>
-                  <td className={styles.td}>{row.hospital}</td>
-                  <td className={styles.td}>{row.patient}</td>
-                  <td className={styles.td}>{row.date}</td>
-                  <td className={styles.td}>{row.service}</td>
-                  <td className={styles.td}>{row.amount}</td>
-                  <td className={styles.td}>{row.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+  return (
+    <div style={{ background: '#f5f7fa', minHeight: '100%', padding: '0px' }}>
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+        {STATS.map((stat) => (
+          <Col xs={24} sm={12} lg={6} key={stat.label}>
+            <Card variant="borderless" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <Statistic
+                title={stat.label}
+                value={stat.value}
+                prefix={<span style={{ marginRight: 8, color: stat.color }}>{stat.icon}</span>}
+                styles={{ content: { fontWeight: 800 } }}
+                formatter={(value) => value.toLocaleString()}
+              />
+              <div style={{ marginTop: 8 }}>
+                <Text type="success" style={{ fontSize: '12px' }}>
+                  <ArrowUpOutlined /> {stat.change}%
+                </Text>
+                <Text type="secondary" style={{ fontSize: '12px', marginLeft: 4 }}>
+                  前週比
+                </Text>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      <Card
+        title={<Title level={4} style={{ margin: 0 }}>最新予約一覧</Title>}
+        variant="borderless"
+        style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+      >
+        <Table
+          dataSource={RESERVATIONS}
+          columns={columns}
+          pagination={false}
+          scroll={{ x: true }}
+        />
+      </Card>
     </div>
   );
 }
-

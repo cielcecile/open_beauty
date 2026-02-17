@@ -2,8 +2,35 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import styles from '@/app/admin/admin.module.css';
 import { useAuth } from '@/context/AuthContext';
+import {
+  Table,
+  Button,
+  Input,
+  Select,
+  Space,
+  Tag,
+  Modal,
+  Form,
+  InputNumber,
+  Typography,
+  Card,
+  Popconfirm,
+  Tooltip,
+  App
+} from 'antd';
+import {
+  PlusOutlined,
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SyncOutlined,
+  PhoneOutlined,
+  EnvironmentOutlined
+} from '@ant-design/icons';
+
+const { Text } = Typography;
+const { TextArea } = Input;
 
 type HospitalCategory = 'DERMATOLOGY' | 'PLASTIC' | 'DENTISTRY' | 'ORIENTAL';
 
@@ -21,9 +48,14 @@ interface HospitalRow {
   image: string | null;
 }
 
-const CATEGORY_OPTIONS: HospitalCategory[] = ['DERMATOLOGY', 'PLASTIC', 'DENTISTRY', 'ORIENTAL'];
-const CATEGORY_LABELS: Record<'ALL' | HospitalCategory, string> = {
-  ALL: 'すべて',
+const CATEGORY_OPTIONS = [
+  { value: 'DERMATOLOGY', label: '皮膚科' },
+  { value: 'PLASTIC', label: '美容外科' },
+  { value: 'DENTISTRY', label: '歯科' },
+  { value: 'ORIENTAL', label: '韓方' },
+];
+
+const CATEGORY_MAP: Record<HospitalCategory, string> = {
   DERMATOLOGY: '皮膚科',
   PLASTIC: '美容外科',
   DENTISTRY: '歯科',
@@ -31,6 +63,7 @@ const CATEGORY_LABELS: Record<'ALL' | HospitalCategory, string> = {
 };
 
 export default function HospitalsManager() {
+  const { message: messageApi, notification: notificationApi } = App.useApp();
   const { session } = useAuth();
   const [hospitals, setHospitals] = useState<HospitalRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,21 +71,9 @@ export default function HospitalsManager() {
   const [ingesting, setIngesting] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<'ALL' | HospitalCategory>('ALL');
-  const [editMode, setEditMode] = useState(false);
-
-  const [form, setForm] = useState<Partial<HospitalRow>>({
-    id: undefined,
-    name: '',
-    category: 'DERMATOLOGY',
-    description: '',
-    detail_description: '',
-    address: '',
-    phone: '',
-    website: '',
-    opening_hours: '',
-    rank: 1,
-    image: '',
-  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [form] = Form.useForm();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const loadHospitals = useCallback(async () => {
     setLoading(true);
@@ -64,14 +85,14 @@ export default function HospitalsManager() {
       .returns<HospitalRow[]>();
 
     if (error) {
-      console.error('Failed to load hospitals:', error);
+      messageApi.error('病院データの読み込みに失敗しました');
       setLoading(false);
       return;
     }
 
     setHospitals(data || []);
     setLoading(false);
-  }, []);
+  }, [messageApi]);
 
   useEffect(() => {
     void loadHospitals();
@@ -87,53 +108,52 @@ export default function HospitalsManager() {
     });
   }, [category, hospitals, query]);
 
-  const onSave = async () => {
-    if (!form.name || !form.category) {
-      alert('名称とカテゴリは必須です。');
-      return;
-    }
-
-    setSaving(true);
-    const payload = {
-      name: form.name,
-      category: form.category,
-      description: form.description || null,
-      detail_description: form.detail_description || null,
-      address: form.address || null,
-      phone: form.phone || null,
-      website: form.website || null,
-      opening_hours: form.opening_hours || null,
-      rank: Number(form.rank || 1),
-      image: form.image || null,
-    };
-
-    if (form.id) {
-      const { error } = await supabase.from('hospitals').update(payload).eq('id', form.id);
-      if (error) {
-        alert('更新に失敗しました: ' + error.message);
-      } else {
-        alert('更新完了');
-        setEditMode(false);
-      }
+  const handleOpenModal = (hospital?: HospitalRow) => {
+    if (hospital) {
+      setEditingId(hospital.id);
+      form.setFieldsValue(hospital);
     } else {
-      const { error } = await supabase.from('hospitals').insert({
-        id: crypto.randomUUID(),
-        ...payload,
-      });
-      if (error) {
-        alert('登録に失敗しました: ' + error.message);
-      } else {
-        alert('登録完了');
-        setEditMode(false);
-      }
+      setEditingId(null);
+      form.resetFields();
+      form.setFieldsValue({ rank: 1, category: 'DERMATOLOGY' });
     }
+    setIsModalOpen(true);
+  };
 
-    setSaving(false);
-    await loadHospitals();
+  const onSave = async () => {
+    try {
+      const values = await form.validateFields();
+      setSaving(true);
+
+      const payload = {
+        ...values,
+        rank: Number(values.rank || 1),
+      };
+
+      if (editingId) {
+        const { error } = await supabase.from('hospitals').update(payload).eq('id', editingId);
+        if (error) throw error;
+        messageApi.success('病院情報を更新しました');
+      } else {
+        const { error } = await supabase.from('hospitals').insert({
+          id: crypto.randomUUID(),
+          ...payload,
+        });
+        if (error) throw error;
+        messageApi.success('新しい病院を登録しました');
+      }
+
+      setIsModalOpen(false);
+      void loadHospitals();
+    } catch (error) {
+      console.error(error);
+      messageApi.error('保存中にエラーが発生しました');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleIngest = async (hospitalId: string) => {
-    if (!confirm('AIの知識を更新しますか？')) return;
     setIngesting(hospitalId);
     try {
       const response = await fetch('/api/admin/ingest', {
@@ -146,143 +166,174 @@ export default function HospitalsManager() {
       });
       const res = await response.json();
       if (res.success) {
-        alert(`AI知識の更新完了: ${res.chunksProcessed}個のデータを学習しました。`);
+        notificationApi.success({
+          message: 'AI 知識同期完了',
+          description: `${res.chunksProcessed}個のデータを学習しました。`,
+          placement: 'topRight'
+        });
       } else {
         throw new Error(res.error || '更新失敗');
       }
     } catch (err) {
-      alert('エラー: ' + (err instanceof Error ? err.message : String(err)));
+      messageApi.error('AI同期中にエラーが発生しました: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIngesting(null);
     }
   };
 
-  const onEdit = (hospital: HospitalRow) => {
-    setForm({ ...hospital });
-    setEditMode(true);
-  };
-
   const onDelete = async (id: string) => {
-    if (!confirm('本当に削除しますか？')) return;
-    await supabase.from('hospitals').delete().eq('id', id);
-    await loadHospitals();
+    const { error } = await supabase.from('hospitals').delete().eq('id', id);
+    if (error) {
+      messageApi.error('削除に失敗しました');
+    } else {
+      messageApi.success('病院を削除しました');
+      void loadHospitals();
+    }
   };
 
-  if (editMode) {
-    return (
-      <div className={styles.card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 className={styles.cardTitle}>{form.id ? 'クリニック編集' : 'クリニック登録'}</h3>
-          <button className={styles.btnGhost} onClick={() => setEditMode(false)}>キャンセル</button>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label className={styles.label}>クリニック名</label>
-            <input className={styles.searchInput} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-
-            <label className={styles.label}>カテゴリ</label>
-            <select className={styles.searchInput} value={form.category} onChange={e => setForm({ ...form, category: e.target.value as HospitalCategory })}>
-              {CATEGORY_OPTIONS.map(opt => <option key={opt} value={opt}>{CATEGORY_LABELS[opt]}</option>)}
-            </select>
-
-            <label className={styles.label}>住所</label>
-            <input className={styles.searchInput} value={form.address || ''} onChange={e => setForm({ ...form, address: e.target.value })} />
-
-            <label className={styles.label}>画像URL (Unsplash等)</label>
-            <input className={styles.searchInput} value={form.image || ''} onChange={e => setForm({ ...form, image: e.target.value })} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label className={styles.label}>電話番号</label>
-            <input className={styles.searchInput} value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
-
-            <label className={styles.label}>ウェブサイト</label>
-            <input className={styles.searchInput} value={form.website || ''} onChange={e => setForm({ ...form, website: e.target.value })} />
-
-            <label className={styles.label}>営業案内</label>
-            <input className={styles.searchInput} value={form.opening_hours || ''} onChange={e => setForm({ ...form, opening_hours: e.target.value })} />
-
-            <label className={styles.label}>表示順位 (Rank)</label>
-            <input type="number" className={styles.searchInput} value={form.rank} onChange={e => setForm({ ...form, rank: Number(e.target.value) })} />
-          </div>
-        </div>
-
-        <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <label className={styles.label}>短い紹介文</label>
-          <input className={styles.searchInput} value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} />
-
-          <label className={styles.label}>詳細な説明 (AI学習に使用)</label>
-          <textarea className={styles.searchInput} style={{ height: '150px' }} value={form.detail_description || ''} onChange={e => setForm({ ...form, detail_description: e.target.value })} />
-        </div>
-
-        <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-          <button className={styles.btnPrimary} style={{ flex: 1 }} onClick={onSave} disabled={saving}>{saving ? '保存中...' : 'クリニック保存'}</button>
-          {form.id && (
-            <button
-              className={styles.btnPrimary}
-              style={{ background: 'var(--c-main)', color: '#333', flex: 1 }}
-              onClick={() => handleIngest(form.id!)}
-              disabled={ingesting === form.id}
-            >
-              {ingesting === form.id ? 'AI学習 중...' : '🔥 AI 知識同期'}
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
+  const columns = [
+    {
+      title: '順位',
+      dataIndex: 'rank',
+      key: 'rank',
+      width: 80,
+      render: (rank: number) => <Text strong>{rank}位</Text>
+    },
+    {
+      title: '病院名 / カテゴリ',
+      key: 'name',
+      render: (_: any, record: HospitalRow) => (
+        <Space orientation="vertical" size={0}>
+          <Text strong style={{ color: '#D4AF37', fontSize: '15px' }}>{record.name}</Text>
+          <Tag color="gold">{CATEGORY_MAP[record.category]}</Tag>
+        </Space>
+      )
+    },
+    {
+      title: '連絡先 / 住所',
+      key: 'contact',
+      render: (_: any, record: HospitalRow) => (
+        <Space orientation="vertical" size={4}>
+          <Text style={{ fontSize: '12px' }} type="secondary"><EnvironmentOutlined /> {record.address || '-'}</Text>
+          <Text style={{ fontSize: '12px' }} type="secondary"><PhoneOutlined /> {record.phone || '-'}</Text>
+        </Space>
+      )
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 250,
+      render: (_: any, record: HospitalRow) => (
+        <Space size="middle">
+          <Tooltip title="編集">
+            <Button icon={<EditOutlined />} onClick={() => handleOpenModal(record)} />
+          </Tooltip>
+          <Tooltip title="AI知識同期">
+            <Button
+              icon={<SyncOutlined spin={ingesting === record.id} />}
+              onClick={() => handleIngest(record.id)}
+              disabled={ingesting === record.id}
+              loading={ingesting === record.id}
+            />
+          </Tooltip>
+          <Popconfirm title="本当に削除しますか？" onConfirm={() => onDelete(record.id)} okText="はい" cancelText="いいえ">
+            <Button danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      )
+    },
+  ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div className={styles.tableContainer}>
-        <div className={styles.tableControls}>
-          <input className={styles.searchInput} placeholder="クリニック検索" value={query} onChange={e => setQuery(e.target.value)} />
-          <select className={styles.searchInput} value={category} onChange={e => setCategory(e.target.value as any)}>
-            <option value="ALL">すべてのカテゴリ</option>
-            {CATEGORY_OPTIONS.map(opt => <option key={opt} value={opt}>{CATEGORY_LABELS[opt]}</option>)}
-          </select>
-          <button className={styles.btnPrimary} style={{ minWidth: '150px' }} onClick={() => { setForm({ id: undefined, name: '', category: 'DERMATOLOGY', rank: 1 }); setEditMode(true); }}>
-            + クリニック登録
-          </button>
-        </div>
+    <div>
+      <Card variant="borderless" style={{ marginBottom: 24, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <Space wrap size="middle" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Space wrap size="middle">
+            <Input
+              placeholder="病院名で検索"
+              prefix={<SearchOutlined />}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              style={{ width: 250 }}
+            />
+            <Select
+              value={category}
+              onChange={setCategory}
+              style={{ width: 160 }}
+              options={[
+                { value: 'ALL', label: 'すべてのカテゴリ' },
+                ...CATEGORY_OPTIONS
+              ]}
+            />
+          </Space>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => handleOpenModal()}
+          >
+            クリニック登録
+          </Button>
+        </Space>
+      </Card>
 
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.th}>順位</th>
-              <th className={styles.th}>クリニック名</th>
-              <th className={styles.th}>カテゴリ</th>
-              <th className={styles.th}>住所</th>
-              <th className={styles.th}>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(hospital => (
-              <tr key={hospital.id}>
-                <td className={styles.td} style={{ fontWeight: 'bold', textAlign: 'center' }}>{hospital.rank}</td>
-                <td className={styles.td} style={{ fontWeight: '700', color: 'var(--c-accent)' }}>{hospital.name}</td>
-                <td className={styles.td}>{CATEGORY_LABELS[hospital.category]}</td>
-                <td className={styles.td}>{hospital.address || '-'}</td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button className={styles.btnPrimary} onClick={() => onEdit(hospital)}>編集</button>
-                    <button
-                      className={styles.btnGhost}
-                      style={{ color: '#666', fontSize: '0.8rem' }}
-                      onClick={() => handleIngest(hospital.id)}
-                      disabled={ingesting === hospital.id}
-                    >
-                      {ingesting === hospital.id ? 'AI...' : 'AI同期'}
-                    </button>
-                    <button className={styles.btnGhost} style={{ color: 'var(--c-danger)' }} onClick={() => onDelete(hospital.id)}>削除</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table
+        columns={columns}
+        dataSource={filtered}
+        rowKey="id"
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+        style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' }}
+      />
+
+      <Modal
+        title={editingId ? 'クリニック編集' : 'クリニック登録'}
+        open={isModalOpen}
+        onOk={onSave}
+        onCancel={() => setIsModalOpen(false)}
+        confirmLoading={saving}
+        width={800}
+        okText="保存"
+        cancelText="キャンセル"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          style={{ marginTop: 20 }}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+            <Form.Item label="クリニック名" name="name" rules={[{ required: true, message: '病院名を入力してください' }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item label="カテゴリ" name="category" rules={[{ required: true }]}>
+              <Select options={CATEGORY_OPTIONS} />
+            </Form.Item>
+            <Form.Item label="住所" name="address">
+              <Input />
+            </Form.Item>
+            <Form.Item label="電話番号" name="phone">
+              <Input />
+            </Form.Item>
+            <Form.Item label="ウェブサイト" name="website">
+              <Input />
+            </Form.Item>
+            <Form.Item label="営業案内" name="opening_hours">
+              <Input />
+            </Form.Item>
+            <Form.Item label="画像URL" name="image">
+              <Input placeholder="Unsplash等のURL" />
+            </Form.Item>
+            <Form.Item label="表示順位" name="rank">
+              <InputNumber min={1} style={{ width: '100%' }} />
+            </Form.Item>
+          </div>
+          <Form.Item label="短い紹介文" name="description">
+            <Input />
+          </Form.Item>
+          <Form.Item label="詳細な説明 (AI学習に使用)" name="detail_description" extra="この内容はAIチャットボット의 답변 생성에 사용됩니다.">
+            <TextArea rows={6} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

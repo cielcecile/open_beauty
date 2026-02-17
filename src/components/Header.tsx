@@ -2,122 +2,109 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import LoginModal from '@/components/LoginModal';
+import { Button, Avatar, Dropdown, Space, Typography } from 'antd';
+import { UserOutlined, LogoutOutlined, ProfileOutlined, LoginOutlined, SettingOutlined } from '@ant-design/icons';
+import type { MenuProps } from 'antd';
 import styles from './Header.module.css';
+import { checkIsAdmin } from '@/lib/admin';
+import { supabase } from '@/lib/supabase';
 
 export default function Header() {
   const { user, loading, signOut } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    async function verify() {
+      if (user?.email) {
+        const allowed = await checkIsAdmin(user.email, supabase);
+        setIsAdmin(allowed);
+      } else {
+        setIsAdmin(false);
+      }
+    }
+    verify();
+  }, [user]);
+
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'email',
+      label: <Typography.Text type="secondary" style={{ fontSize: '12px' }}>{user?.email}</Typography.Text>,
+      disabled: true,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'mypage',
+      label: <Link href="/mypage" style={{ textDecoration: 'none', color: 'inherit' }}>マイページ</Link>,
+      icon: <ProfileOutlined />,
+    },
+    ...(isAdmin ? [
+      {
+        key: 'admin',
+        label: <Link href="/admin" style={{ textDecoration: 'none', color: 'inherit' }}>管理者ページ</Link>,
+        icon: <SettingOutlined />,
+      }
+    ] : []),
+    {
+      key: 'logout',
+      label: 'ログアウト',
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: () => signOut(),
+    },
+  ];
 
   return (
     <>
-      <header className={styles.header}>
-        <Link href="/" className={styles.logo} style={{ fontSize: '1.2rem', margin: '0 auto', display: 'flex', alignItems: 'center' }}>
+      <header className={styles.header} style={{
+        height: '64px',
+        padding: '0 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#fff',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000
+      }}>
+        <Link href="/" className={styles.logo} style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#D4AF37', fontWeight: 700 }}>
           <Image src="/logo.png" alt="AUREUM" width={28} height={28} style={{ marginRight: '10px' }} />
           AUREUM BEAUTY
         </Link>
 
-        <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)' }}>
+        <div style={{ position: 'absolute', right: '20px' }}>
           {loading ? null : user ? (
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowMenu((prev) => !prev)}
+            <Dropdown menu={{ items: menuItems }} placement="bottomRight" arrow>
+              <Avatar
                 style={{
-                  background: 'linear-gradient(135deg, #D4AF37, #b89628)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '34px',
-                  height: '34px',
-                  fontSize: '0.85rem',
-                  fontWeight: '700',
+                  backgroundColor: '#D4AF37',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  border: '2px solid #fff',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
-                title={user.email || ''}
+                icon={<UserOutlined />}
               >
                 {(user.email?.[0] || 'U').toUpperCase()}
-              </button>
-
-              {showMenu && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '42px',
-                    background: '#fff',
-                    borderRadius: '12px',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                    padding: '0.5rem 0',
-                    minWidth: '160px',
-                    zIndex: 100,
-                  }}
-                >
-                  <div style={{ padding: '0.7rem 1rem', fontSize: '0.8rem', color: '#888', borderBottom: '1px solid #f0f0f0' }}>
-                    {user.email}
-                  </div>
-                  <Link
-                    href="/mypage"
-                    onClick={() => setShowMenu(false)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '0.7rem 1rem',
-                      textDecoration: 'none',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      color: '#333',
-                      borderBottom: '1px solid #f0f0f0',
-                    }}
-                  >
-                    マイページ
-                  </Link>
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setShowMenu(false);
-                    }}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '0.7rem 1rem',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      color: '#e53e3e',
-                      fontFamily: 'inherit',
-                    }}
-                  >
-                    ログアウト
-                  </button>
-                </div>
-              )}
-            </div>
+              </Avatar>
+            </Dropdown>
           ) : (
-            <button
+            <Button
+              type="primary"
+              ghost
+              icon={<LoginOutlined />}
               onClick={() => setShowLogin(true)}
-              style={{
-                background: 'none',
-                border: '1.5px solid var(--c-accent)',
-                color: 'var(--c-accent)',
-                borderRadius: '8px',
-                padding: '0.35rem 0.8rem',
-                fontSize: '0.8rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
+              style={{ borderRadius: '8px' }}
             >
               ログイン
-            </button>
+            </Button>
           )}
         </div>
       </header>

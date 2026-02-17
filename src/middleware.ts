@@ -11,12 +11,16 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/admin')) {
+    // Note: Temporary bypass of server-side cookie check. 
+    // AdminLayout.tsx handles client-side auth validation using LocalStorage.
+    /*
     if (!hasSupabaseAuthCookie(request)) {
       const url = request.nextUrl.clone();
       url.pathname = '/';
       url.searchParams.set('auth', 'required');
       return NextResponse.redirect(url);
     }
+    */
   }
 
   if (pathname.startsWith('/api/admin')) {

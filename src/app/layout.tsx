@@ -2,6 +2,8 @@
 import { Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
 import ClientLayout from '@/components/ClientLayout';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { ConfigProvider } from 'antd';
 
 const notoSansJP = Noto_Sans_JP({
   variable: '--font-noto-sans-jp',
@@ -42,8 +44,21 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ja">
       <body className={`${notoSansJP.variable} flex-layout`}>
-        <ClientLayout>{children}</ClientLayout>
+        <AntdRegistry>
+          <ConfigProvider
+            theme={{
+              token: {
+                colorPrimary: '#D4AF37',
+                borderRadius: 8,
+                fontFamily: 'var(--font-noto-sans-jp)',
+              },
+            }}
+          >
+            <ClientLayout>{children}</ClientLayout>
+          </ConfigProvider>
+        </AntdRegistry>
       </body>
     </html>
   );
 }
+

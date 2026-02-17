@@ -3,6 +3,21 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Input,
+    Button,
+    Avatar,
+    Badge,
+    Typography,
+    Space,
+    Spin
+} from 'antd';
+import {
+    SendOutlined,
+    CloseOutlined,
+    CustomerServiceOutlined,
+    LoadingOutlined
+} from '@ant-design/icons';
 import styles from './ChatBot.module.css';
 import { useChat } from '@/context/ChatContext';
 
@@ -20,13 +35,11 @@ export default function ChatBot() {
     const [isLoading, setIsLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Close when route changes (optional)
     useEffect(() => {
-        // Automatically scroll to bottom
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages, isLoading, isOpen]); // Added isOpen to dependency
+    }, [messages, isLoading, isOpen]);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -69,55 +82,95 @@ export default function ChatBot() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside window
+                            style={{
+                                background: '#fff',
+                                borderRadius: '20px',
+                                overflow: 'hidden',
+                                boxShadow: '0 12px 48px rgba(0,0,0,0.15)',
+                                border: '1px solid #f0f0f0'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            <div className={styles.chatHeader}>
-                                <div className={styles.yunaAvatarMini}>
-                                    <Image src="/images/yuna.png" alt="Yuna" fill style={{ objectFit: 'cover' }} />
-                                </div>
-                                <div className={styles.headerInfo}>
-                                    <h4>AI相談員 ユナ</h4>
-                                    <span>🟢 オンライン</span>
-                                </div>
-                                <button onClick={closeChat} className={styles.closeBtn}>×</button>
+                            <div className={styles.chatHeader} style={{
+                                background: '#fff',
+                                padding: '16px 20px',
+                                borderBottom: '1px solid #f0f0f0',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between'
+                            }}>
+                                <Space size="middle">
+                                    <Badge dot color="green" offset={[-4, 32]}>
+                                        <Avatar
+                                            src="/images/yuna.png"
+                                            size={40}
+                                            icon={<CustomerServiceOutlined />}
+                                            style={{ border: '2px solid #D4AF37' }}
+                                        />
+                                    </Badge>
+                                    <div>
+                                        <Typography.Text strong style={{ display: 'block' }}>AI相談員 ユナ</Typography.Text>
+                                        <Typography.Text type="secondary" style={{ fontSize: '11px' }}>🟢 オンライン</Typography.Text>
+                                    </div>
+                                </Space>
+                                <Button
+                                    type="text"
+                                    icon={<CloseOutlined />}
+                                    onClick={closeChat}
+                                    shape="circle"
+                                />
                             </div>
 
-                            <div className={styles.messageList} ref={scrollRef}>
+                            <div className={styles.messageList} ref={scrollRef} style={{ padding: '20px', background: '#fafafa' }}>
                                 {messages.map((m, i) => (
                                     <motion.div
                                         key={i}
-                                        initial={{ opacity: 0, x: m.role === 'yuna' ? -10 : 10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        className={`${styles.message} ${m.role === 'yuna' ? styles.yunaMessage : styles.userMessage}`}
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className={m.role === 'yuna' ? styles.yunaMessage : styles.userMessage}
+                                        style={{
+                                            marginBottom: '10px',
+                                            padding: '10px 16px',
+                                            borderRadius: m.role === 'yuna' ? '18px 18px 18px 4px' : '18px 18px 4px 18px',
+                                            maxWidth: '85%',
+                                            fontSize: '14px',
+                                            lineHeight: '1.5',
+                                            alignSelf: m.role === 'yuna' ? 'flex-start' : 'flex-end',
+                                            background: m.role === 'yuna' ? '#fff' : '#D4AF37',
+                                            color: m.role === 'yuna' ? '#333' : '#fff',
+                                            boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                                            border: m.role === 'yuna' ? '1px solid #eee' : 'none'
+                                        }}
                                     >
                                         {m.text}
                                     </motion.div>
                                 ))}
                                 {isLoading && (
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        className={`${styles.message} ${styles.yunaMessage}`}
-                                    >
-                                        入力中...
-                                    </motion.div>
+                                    <div style={{ padding: '10px' }}>
+                                        <Spin indicator={<LoadingOutlined style={{ fontSize: 18, color: '#D4AF37' }} spin />} />
+                                    </div>
                                 )}
                             </div>
 
-                            <div className={styles.chatInputArea}>
-                                <input
-                                    className={styles.input}
-                                    placeholder="メッセージを入力..."
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                                />
-                                <button className={styles.sendBtn} onClick={handleSend} disabled={isLoading}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                </button>
+                            <div className={styles.chatInputArea} style={{ padding: '16px', background: '#fff', borderTop: '1px solid #f0f0f0' }}>
+                                <Space.Compact style={{ width: '100%' }}>
+                                    <Input
+                                        placeholder="メッセージを入力..."
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onPressEnter={handleSend}
+                                        style={{ borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}
+                                    />
+                                    <Button
+                                        type="primary"
+                                        icon={<SendOutlined />}
+                                        onClick={handleSend}
+                                        disabled={isLoading}
+                                        style={{ borderTopRightRadius: '20px', borderBottomRightRadius: '20px' }}
+                                    />
+                                </Space.Compact>
                             </div>
                         </motion.div>
-                        {/* Background backdrop click to close could be added here if needed, currently pointer-events: none on container prevents it unless we add a specific backdrop div */}
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }} onClick={closeChat}></div>
                     </motion.div>
                 )}
