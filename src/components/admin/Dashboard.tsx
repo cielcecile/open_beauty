@@ -52,7 +52,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div style={{ background: '#f5f7fa', minHeight: '100%', padding: '0px' }}>
+    <div>
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         {STATS.map((stat) => (
           <Col xs={24} sm={12} lg={6} key={stat.label}>
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
           dataSource={RESERVATIONS}
           columns={columns}
           pagination={false}
-          scroll={{ x: true }}
+          scroll={{ x: 'max-content' }}
         />
       </Card>
     </div>

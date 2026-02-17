@@ -24,6 +24,7 @@ import {
   LogoutOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/context/AuthContext';
 import { checkIsAdmin } from '@/lib/admin';
@@ -94,6 +95,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const userMenuItems = [
+    {
+      key: 'home',
+      label: <Link href="/">サービスに戻る</Link>,
+      icon: <HomeOutlined />,
+    },
     {
       key: 'profile',
       label: 'プロフィール',
@@ -240,7 +246,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Dropdown>
               </Space>
             </Header>
-            <Content style={{ margin: '24px 16px', padding: 24, background: '#fff', borderRadius: 12, minHeight: 280, overflowX: 'hidden' }}>
+            <Content style={{ margin: '24px 16px', padding: 24, background: '#fff', borderRadius: 12, minHeight: '100%' }}>
               <div style={{ marginBottom: 24, display: isMobile ? 'block' : 'none' }}>
                 <Title level={3} style={{ margin: 0 }}>
                   {pathname === '/admin' && 'ダッシュボード'}
