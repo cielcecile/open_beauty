@@ -248,42 +248,59 @@ export default function HospitalsManager() {
     <div>
       <Card variant="borderless" style={{ marginBottom: 24, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
         <Space wrap size="middle" style={{ width: '100%', justifyContent: 'space-between' }}>
-          <Space wrap size="middle">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', flex: 1 }}>
             <Input
               placeholder="病院名で検索"
               prefix={<SearchOutlined />}
               value={query}
               onChange={e => setQuery(e.target.value)}
-              style={{ width: 250 }}
+              style={{ minWidth: '200px', flex: 1 }}
             />
             <Select
               value={category}
               onChange={setCategory}
-              style={{ width: 160 }}
+              style={{ minWidth: '160px', flex: 1 }}
               options={[
                 { value: 'ALL', label: 'すべてのカテゴリ' },
                 ...CATEGORY_OPTIONS
               ]}
             />
-          </Space>
+          </div>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => handleOpenModal()}
+            style={{ minWidth: 'fit-content' }}
           >
-            クリニック登録
+            新規登録
           </Button>
         </Space>
       </Card>
 
-      <Table
-        columns={columns}
-        dataSource={filtered}
-        rowKey="id"
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-        style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' }}
-      />
+      <div className="admin-table-wrapper">
+        <Table
+          columns={columns}
+          dataSource={filtered}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10, size: 'small' }}
+          scroll={{ x: 800 }}
+          style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' }}
+        />
+      </div>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .admin-modal-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .ant-table-pagination-right {
+            justify-content: center !important;
+            float: none !important;
+            display: flex !important;
+          }
+        }
+      `}</style>
 
       <Modal
         title={editingId ? 'クリニック編集' : 'クリニック登録'}
@@ -294,13 +311,15 @@ export default function HospitalsManager() {
         width={800}
         okText="保存"
         cancelText="キャンセル"
+        style={{ top: 20 }}
+        mask={{ closable: false }}
       >
         <Form
           form={form}
           layout="vertical"
           style={{ marginTop: 20 }}
         >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+          <div className="admin-modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
             <Form.Item label="クリニック名" name="name" rules={[{ required: true, message: '病院名を入力してください' }]}>
               <Input />
             </Form.Item>

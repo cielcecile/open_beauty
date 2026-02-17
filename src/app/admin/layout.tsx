@@ -40,6 +40,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [collapsed, setCollapsed] = useState(false);
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     async function verify() {
       if (!loading) {
@@ -112,12 +114,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     },
   ];
 
+  const siderWidth = 240;
+  const collapsedWidth = isMobile ? 0 : 80;
+
   return (
     <ConfigProvider
       theme={{
         token: {
           colorPrimary: '#D4AF37',
           borderRadius: 8,
+          fontSize: 16,
         },
         components: {
           Layout: {
@@ -128,12 +134,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }}
     >
       <App>
+        <style jsx global>{`
+          @media (max-width: 768px) {
+            .ant-layout-content {
+              padding: 16px !important;
+              margin: 16px 8px !important;
+            }
+            .admin-header-title {
+              display: none;
+            }
+          }
+        `}</style>
         <Layout style={{ minHeight: '100vh' }}>
           <Sider
             trigger={null}
             collapsible
             collapsed={collapsed}
-            width={240}
+            breakpoint="lg"
+            collapsedWidth={collapsedWidth}
+            onBreakpoint={(broken) => {
+              setIsMobile(broken);
+              if (broken) setCollapsed(true);
+            }}
+            width={siderWidth}
             style={{
               overflow: 'auto',
               height: '100vh',
@@ -141,7 +164,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               left: 0,
               top: 0,
               bottom: 0,
-              zIndex: 100,
+              zIndex: 1001, // Higher than header
             }}
           >
             <div style={{
@@ -153,8 +176,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               marginBottom: 16
             }}>
               <Image src="/logo.png" alt="AUREUM" width={32} height={32} />
-              {!collapsed && (
-                <Title level={5} style={{ color: '#fff', margin: '0 0 0 12px', fontSize: '14px' }}>
+              {(!collapsed || (isMobile && !collapsed)) && (
+                <Title level={5} style={{ color: '#fff', margin: '0 0 0 12px', fontSize: '14px', whiteSpace: 'nowrap' }}>
                   AUREUM ADMIN
                 </Title>
               )}
@@ -165,31 +188,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               selectedKeys={[pathname]}
               items={menuItems}
               style={{ borderRight: 0 }}
+              onClick={() => {
+                if (isMobile) setCollapsed(true);
+              }}
             />
           </Sider>
-          <Layout style={{ marginLeft: collapsed ? 80 : 240, transition: 'all 0.2s' }}>
+          <Layout style={{
+            marginLeft: isMobile ? 0 : (collapsed ? 80 : 240),
+            transition: 'all 0.2s',
+            minHeight: '100vh'
+          }}>
             <Header style={{
-              padding: '0 24px',
+              padding: '0 16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               position: 'sticky',
               top: 0,
-              zIndex: 99,
+              zIndex: 1000,
               width: '100%',
+              background: '#fff',
               boxShadow: '0 1px 4px rgba(0,21,41,.08)'
             }}>
-              <Button
-                type="text"
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => setCollapsed(!collapsed)}
-                style={{ fontSize: '16px', width: 64, height: 64 }}
-              />
+              <Space>
+                <Button
+                  type="text"
+                  icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  onClick={() => setCollapsed(!collapsed)}
+                  style={{ fontSize: '16px', width: 48, height: 48 }}
+                />
+                <Text strong className="admin-header-title" style={{ fontSize: '16px' }}>
+                  {pathname === '/admin' && 'ダッシュボード'}
+                  {pathname === '/admin/hospitals' && '病院管理'}
+                  {pathname === '/admin/treatments' && '施術管理'}
+                  {pathname === '/admin/settings' && '設定'}
+                </Text>
+              </Space>
 
-              <Space size="large">
+              <Space size="middle">
                 <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
                   <Space style={{ cursor: 'pointer' }}>
-                    <div style={{ textAlign: 'right' }}>
+                    <div style={{ textAlign: 'right', display: isMobile ? 'none' : 'block' }}>
                       <Text strong style={{ display: 'block', fontSize: '12px', lineHeight: '1.2' }}>{user?.email?.split('@')[0]}</Text>
                       <Text type="secondary" style={{ fontSize: '10px' }}>管理者</Text>
                     </div>
@@ -201,9 +240,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Dropdown>
               </Space>
             </Header>
-            <Content style={{ margin: '24px 16px', padding: 24, background: '#fff', borderRadius: 12, minHeight: 280 }}>
-              <div style={{ marginBottom: 24 }}>
-                <Title level={2} style={{ margin: 0 }}>
+            <Content style={{ margin: '24px 16px', padding: 24, background: '#fff', borderRadius: 12, minHeight: 280, overflowX: 'hidden' }}>
+              <div style={{ marginBottom: 24, display: isMobile ? 'block' : 'none' }}>
+                <Title level={3} style={{ margin: 0 }}>
                   {pathname === '/admin' && 'ダッシュボード'}
                   {pathname === '/admin/hospitals' && '病院管理'}
                   {pathname === '/admin/treatments' && '施術管理'}
@@ -212,10 +251,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               {children}
             </Content>
-            <Layout.Footer style={{ textAlign: 'center', background: '#f5f5f5' }}>
-              AUREUM BEAUTY ADMIN ©2026 Created by Team Aureum
+            <Layout.Footer style={{ textAlign: 'center', background: '#f5f5f5', padding: '16px 8px' }}>
+              AUREUM BEAUTY ADMIN ©2026
             </Layout.Footer>
           </Layout>
+          {isMobile && !collapsed && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.45)',
+                zIndex: 1000,
+              }}
+              onClick={() => setCollapsed(true)}
+            />
+          )}
         </Layout>
       </App>
     </ConfigProvider>

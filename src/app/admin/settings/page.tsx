@@ -126,7 +126,7 @@ export default function AdminSettingsPage() {
             label: (
                 <span>
                     <UserOutlined />
-                    管理者アカウント
+                    <span className="tab-label">管理者</span>
                 </span>
             ),
             children: (
@@ -140,16 +140,19 @@ export default function AdminSettingsPage() {
                             ]}
                             pagination={false}
                             rowKey="email"
+                            scroll={{ x: true }}
                         />
                     </Card>
-                    <Card title="新規管理者招待 (DB追加)" variant="borderless">
-                        <Form layout="inline" onFinish={handleAddAdmin}>
-                            <Form.Item name="email" rules={[{ required: true, type: 'email' }]}>
-                                <Input placeholder="admin@example.com" style={{ width: 300 }} />
-                            </Form.Item>
-                            <Form.Item>
-                                <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>追加</Button>
-                            </Form.Item>
+                    <Card title="新規管理者追加" variant="borderless">
+                        <Form layout="vertical" onFinish={handleAddAdmin}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                                <Form.Item name="email" rules={[{ required: true, type: 'email' }]} style={{ flex: 1, minWidth: '200px', marginBottom: 0 }}>
+                                    <Input placeholder="admin@example.com" />
+                                </Form.Item>
+                                <Form.Item style={{ marginBottom: 0 }}>
+                                    <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>追加</Button>
+                                </Form.Item>
+                            </div>
                         </Form>
                         <Alert
                             style={{ marginTop: 16 }}
@@ -167,7 +170,7 @@ export default function AdminSettingsPage() {
             label: (
                 <span>
                     <SettingOutlined />
-                    サイト設定
+                    <span className="tab-label">サイト設定</span>
                 </span>
             ),
             children: (
@@ -197,7 +200,7 @@ export default function AdminSettingsPage() {
                             <Input placeholder="https://line.me/..." />
                         </Form.Item>
                         <Form.Item>
-                            <Button type="primary" htmlType="submit" loading={loading}>
+                            <Button type="primary" htmlType="submit" loading={loading} block={true} style={{ maxWidth: '200px' }}>
                                 変更を保存
                             </Button>
                         </Form.Item>
@@ -210,7 +213,7 @@ export default function AdminSettingsPage() {
             label: (
                 <span>
                     <ApiOutlined />
-                    システム & API
+                    <span className="tab-label">システム</span>
                 </span>
             ),
             children: (
@@ -219,14 +222,14 @@ export default function AdminSettingsPage() {
                         <div style={{ padding: '8px 0' }}>
                             <Space orientation="vertical" style={{ width: '100%' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Space><DatabaseOutlined /> Supabase Connection</Space>
+                                    <Space><DatabaseOutlined /> Supabase</Space>
                                     <Tag color={apiStatus.supabase === 'online' ? 'success' : 'error'} icon={apiStatus.supabase === 'online' ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}>
                                         {apiStatus.supabase.toUpperCase()}
                                     </Tag>
                                 </div>
                                 <Divider style={{ margin: '8px 0' }} />
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Space><SyncOutlined spin={apiStatus.gemini === 'checking'} /> Gemini AI API</Space>
+                                    <Space><SyncOutlined spin={apiStatus.gemini === 'checking'} /> Gemini AI</Space>
                                     <Tag color={apiStatus.gemini === 'online' ? 'success' : apiStatus.gemini === 'checking' ? 'processing' : 'error'}>
                                         {apiStatus.gemini.toUpperCase()}
                                     </Tag>
@@ -239,19 +242,20 @@ export default function AdminSettingsPage() {
                             </Space>
                         </div>
                         <Button
-                            style={{ marginTop: 24 }}
                             icon={<SyncOutlined />}
                             onClick={checkStatus}
+                            block={true}
+                            style={{ marginTop: 24, maxWidth: '200px' }}
                         >
-                            ステータスを更新
+                            更新
                         </Button>
                     </Card>
 
                     <Card title="メンテナンスモード" variant="borderless">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                                <Text strong>サイトの公開を一時停止</Text>
-                                <div style={{ fontSize: '12px', color: '#888' }}>オンにすると、一般ユーザーはメンテナンス画面を表示します。</div>
+                                <Text strong>サイト停止</Text>
+                                <div style={{ fontSize: '11px', color: '#888' }}>一般ユーザーの閲覧を制限します。</div>
                             </div>
                             <Switch disabled />
                         </div>
@@ -263,6 +267,20 @@ export default function AdminSettingsPage() {
 
     return (
         <div style={{ maxWidth: 1000 }}>
+            <style jsx global>{`
+                @media (max-width: 576px) {
+                    .tab-label {
+                        display: none;
+                    }
+                    .ant-tabs-nav-list {
+                        width: 100%;
+                        justify-content: space-around;
+                    }
+                    .ant-card-head-title {
+                        font-size: 16px !important;
+                    }
+                }
+            `}</style>
             <Tabs defaultActiveKey="1" items={items} />
         </div>
     );

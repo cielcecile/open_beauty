@@ -197,7 +197,7 @@
     background-color: rgba(248, 250, 252, 0.4);
     padding: 18px 24px;
     text-align: left;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--admin-text-second);
     text-transform: uppercase;
@@ -222,7 +222,7 @@
 .badge {
     padding: 6px 12px;
     border-radius: 8px;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
@@ -318,7 +318,7 @@
     background: white;
     color: var(--admin-text-main);
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 500;
     transition: var(--admin-transition);
 }

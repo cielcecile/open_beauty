@@ -279,9 +279,9 @@ export default function TreatmentsPage() {
                         prefix={<SearchOutlined />}
                         value={query}
                         onChange={e => setQuery(e.target.value)}
-                        style={{ width: 300 }}
+                        style={{ minWidth: '200px', flex: 1 }}
                     />
-                    <Space size="middle" wrap>
+                    <Space size="middle" wrap style={{ width: '100%', justifyContent: 'flex-end' }}>
                         <Button icon={<DownloadOutlined />} onClick={handleExport}>Excel出力</Button>
                         <Upload customRequest={handleImport} showUploadList={false}>
                             <Button icon={<UploadOutlined />}>Excel入力</Button>
@@ -293,14 +293,30 @@ export default function TreatmentsPage() {
                 </div>
             </Card>
 
-            <Table
-                columns={columns}
-                dataSource={filtered}
-                rowKey="id"
-                loading={isLoading}
-                pagination={{ pageSize: 12 }}
-                style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' }}
-            />
+            <div className="admin-table-wrapper">
+                <Table
+                    columns={columns}
+                    dataSource={filtered}
+                    rowKey="id"
+                    loading={isLoading}
+                    pagination={{ pageSize: 12, size: 'small' }}
+                    scroll={{ x: 1000 }}
+                    style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' }}
+                />
+            </div>
+
+            <style jsx global>{`
+                @media (max-width: 768px) {
+                    .admin-modal-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                    .ant-table-pagination-right {
+                        justify-content: center !important;
+                        float: none !important;
+                        display: flex !important;
+                    }
+                }
+            `}</style>
 
             <Modal
                 title={editingId ? '施術情報編集' : '新規施術追加'}
@@ -311,9 +327,11 @@ export default function TreatmentsPage() {
                 width={700}
                 okText="保存"
                 cancelText="キャンセル"
+                style={{ top: 20 }}
+                mask={{ closable: false }}
             >
                 <Form form={form} layout="vertical" style={{ marginTop: 20 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+                    <div className="admin-modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
                         <Form.Item label="施術名 (日本語)" name="name" rules={[{ required: true, message: '施術名を入力してください' }]}>
                             <Input />
                         </Form.Item>
