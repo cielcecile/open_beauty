@@ -1,95 +1,91 @@
 ﻿'use client';
 
 import Link from 'next/link';
-import { Button, Typography, Card, Row, Col } from 'antd';
-import { StarOutlined } from '@ant-design/icons';
+import { motion } from 'framer-motion';
+import { StarOutlined, RightOutlined } from '@ant-design/icons';
 import styles from './page.module.css';
 
-const { Title, Paragraph, Text } = Typography;
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    // @ts-ignore
+    transition: { duration: 0.8, ease: "easeOut" }
+  }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2
+    }
+  }
+};
 
 export default function Home() {
   return (
-    <div className={styles.container}>
-      <section className={styles.hero} style={{ padding: '60px 20px', textAlign: 'center' }}>
-        <Typography>
-          <Title level={1} style={{ fontSize: '2.5rem', marginBottom: '1.5rem', fontWeight: 700 }}>
-            AI美容分析で
-            <br />
-            あなたに合う施術を見つける
-          </Title>
-          <Paragraph style={{ fontSize: '1.1rem', color: '#666', marginBottom: '2.5rem' }}>
-            写真一枚で肌状態を分析し、
-            <br />
-            おすすめ施術とクリニックを比較できます。
-            <br />
-            予約までスムーズに進められます。
-          </Paragraph>
-        </Typography>
+    <main className={styles.main}>
+      <motion.div
+        className={styles.heroSection}
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+      >
+        <div className={styles.heroContent}>
+          <motion.div variants={fadeIn as any}>
+            <h1 className={styles.title}>
+              AI美容分析で<br />
+              <span className="text-accent">あなただけの美</span>を見つける
+            </h1>
+            <p className={styles.subtitle}>
+              最先端AIが写真一枚で肌状態を分析。<br />
+              最適な美容施術とクリニックを、<br className="sm:hidden" />あなたのために提案します。
+            </p>
+          </motion.div>
 
-        <Link href="/analysis">
-          <Button
-            type="primary"
-            size="large"
-            icon={<StarOutlined />}
-            style={{
-              height: 'auto',
-              padding: '16px 40px',
-              fontSize: '1.2rem',
-              borderRadius: '50px',
-              boxShadow: '0 4px 15px rgba(212, 175, 55, 0.3)',
-              marginBottom: '40px'
-            }}
+          <motion.div variants={fadeIn as any}>
+            <Link href="/analysis" className={styles.ctaButton}>
+              <div className="flex-center" style={{ gap: '8px' }}>
+                <StarOutlined style={{ fontSize: '1.2rem' }} />
+                <span>AI美容分析をはじめる</span>
+              </div>
+              <span className={styles.ctaSubtext}>無料・会員登録なしで試す</span>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            className={styles.quizGrid}
+            variants={fadeIn as any}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span>AI美容分析をはじめる</span>
-              <Text style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)' }}>画像アップロードで結果を確認</Text>
-            </div>
-          </Button>
-        </Link>
+            <Link href="/quiz/beauty-type" className={`${styles.quizCard} beauty`}>
+              <div className={styles.cardIcon}>💄</div>
+              <h3 className={styles.cardTitle}>ビューティータイプ診断</h3>
+              <p className={styles.cardDesc}>
+                5つの質問であなたの美の傾向を分析。<br />
+                似合うメイクや施術の方向性がわかります。
+              </p>
+              <div className="text-accent" style={{ marginTop: 'auto', paddingTop: '1rem' }}>
+                診断する <RightOutlined style={{ fontSize: '0.8rem' }} />
+              </div>
+            </Link>
 
-        <div className={styles.quizSection} style={{ marginTop: '20px' }}>
-          <Row gutter={[24, 24]} justify="center">
-            <Col xs={24} sm={12}>
-              <Link href="/quiz/beauty-type" style={{ textDecoration: 'none' }}>
-                <Card
-                  hoverable
-                  className={styles.quizCard}
-                  style={{
-                    borderRadius: '20px',
-                    border: 'none',
-                    background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-                    height: '100%'
-                  }}
-                  styles={{ body: { padding: '24px' } }}
-                >
-                  <div style={{ fontSize: '2rem', marginBottom: '12px' }}>💄</div>
-                  <Title level={4} style={{ color: '#fff', margin: 0 }}>ビューティータイプ診断</Title>
-                  <Text style={{ color: '#fff', opacity: 0.9 }}>5つの質問で肌タイプを簡単にチェック</Text>
-                </Card>
-              </Link>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Link href="/quiz/k-beauty" style={{ textDecoration: 'none' }}>
-                <Card
-                  hoverable
-                  className={styles.quizCard}
-                  style={{
-                    borderRadius: '20px',
-                    border: 'none',
-                    background: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
-                    height: '100%'
-                  }}
-                  styles={{ body: { padding: '24px' } }}
-                >
-                  <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🌸</div>
-                  <Title level={4} style={{ color: '#fff', margin: 0 }}>K-Beautyスタイル診断</Title>
-                  <Text style={{ color: '#fff', opacity: 0.9 }}>あなたに合うK-Beauty施術の方向性を提案</Text>
-                </Card>
-              </Link>
-            </Col>
-          </Row>
+            <Link href="/quiz/k-beauty" className={`${styles.quizCard} kbeauty`}>
+              <div className={styles.cardIcon}>🌸</div>
+              <h3 className={styles.cardTitle}>K-Beautyスタイル診断</h3>
+              <p className={styles.cardDesc}>
+                韓国トレンドの中から<br />
+                あなたに最適なスタイルをご提案します。
+              </p>
+              <div className="text-accent" style={{ marginTop: 'auto', paddingTop: '1rem' }}>
+                診断する <RightOutlined style={{ fontSize: '0.8rem' }} />
+              </div>
+            </Link>
+          </motion.div>
         </div>
-      </section>
-    </div>
+      </motion.div>
+    </main>
   );
 }

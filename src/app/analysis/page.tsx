@@ -3,13 +3,12 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import {
   Button,
   Card,
-  Steps,
   Upload,
   Typography,
   Row,
@@ -23,16 +22,13 @@ import {
 } from 'antd';
 import {
   CameraOutlined,
-  FileSearchOutlined,
   LoadingOutlined,
   SwapLeftOutlined,
-  CheckCircleOutlined,
   HeartOutlined,
   BulbOutlined,
   ShopOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
-import type { UploadFile } from 'antd/es/upload/interface';
 import styles from './analysis.module.css';
 
 type AnalysisApiResponse = {
@@ -47,6 +43,8 @@ type AnalysisApiResponse = {
     description?: string;
     price_range?: string;
   }>;
+  code?: string;
+  error?: string;
 };
 
 type StepName = 'ENTRY' | 'UPLOAD' | 'SURVEY' | 'ANALYZING' | 'RESULT';
@@ -74,9 +72,7 @@ function AnalysisContent() {
 
   useEffect(() => {
     const id = searchParams.get('id');
-    if (id) {
-      void loadSaved(id);
-    }
+    if (id) void loadSaved(id);
   }, [searchParams]);
 
   const loadSaved = async (id: string) => {
@@ -106,26 +102,12 @@ function AnalysisContent() {
       img.src = base64Str;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1024;
-        const MAX_HEIGHT = 1024;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+        const MAX = 1024;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
+        else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d')?.drawImage(img, 0, 0, w, h);
         resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
     });
@@ -134,13 +116,12 @@ function AnalysisContent() {
   const beforeUpload = (file: File) => {
     const reader = new FileReader();
     reader.onloadend = async () => {
-      const base64 = reader.result as string;
-      const resized = await resizeImage(base64);
+      const resized = await resizeImage(reader.result as string);
       setImage(resized);
       setStep('SURVEY');
     };
     reader.readAsDataURL(file);
-    return false; // Prevent auto upload
+    return false;
   };
 
   const runAnalysis = async () => {
@@ -151,271 +132,180 @@ function AnalysisContent() {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image,
-          concerns: selectedConcerns
-        }),
+        body: JSON.stringify({ image, concerns: selectedConcerns }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || '分析に失敗しました。');
-
+      const data: AnalysisApiResponse = await response.json();
+      if (!response.ok) {
+        if (data.code === 'APP_RATE_LIMIT') throw new Error('リクエストが多すぎます。少し時間を置いてから再度お試しください。');
+        if (data.code === 'GEMINI_QUOTA_EXCEEDED') throw new Error('現在アクセスが集中しています。2〜3分後に再度お試しください。');
+        if (data.code === 'AI_FAILED' || data.code === 'AI_RESPONSE_PARSE_ERROR') {
+          throw new Error(image ? 'AIが写真をうまく読み取れませんでした。明るい場所で正面から撮り直してみてください。' : 'AIが悩みの分析に失敗しました。内容を変えて再度お試しください。');
+        }
+        if (data.code === 'AI_MODEL_ERROR') {
+          throw new Error('AIモデルの接続に失敗しました。(404)');
+        }
+        if (data.code === 'AI_SAFETY_BLOCK') {
+          throw new Error('安全性フィルタによりブロックされました。別の写真で再度お試しください。');
+        }
+        if (data.code === 'GEMINI_KEY_MISSING') {
+          throw new Error('サーバー側のAPIキー設定が未完了です。');
+        }
+        throw new Error(data.error || '分析に失敗しました。');
+      }
       setResult(data);
       setStep('RESULT');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'エラーが発生しました。');
+      console.error('Analysis error:', err);
+      setError(err instanceof Error ? err.message : '予期せぬエラーが発生しました。');
       setStep('SURVEY');
     }
   };
 
-  const toggleConcern = (label: string) => {
-    setSelectedConcerns(prev =>
-      prev.includes(label) ? prev.filter(c => c !== label) : [...prev, label]
-    );
+  const stepVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 }
   };
 
   const renderEntry = () => (
-    <div style={{ padding: '20px' }}>
+    <motion.div initial="hidden" animate="visible" exit="exit" variants={stepVariants} style={{ padding: '20px' }}>
       <Row gutter={[24, 24]}>
         <Col xs={24} md={12}>
-          <Card
-            hoverable
-            onClick={() => setStep('UPLOAD')}
-            style={{ borderRadius: '16px', textAlign: 'center', height: '100%', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
-          >
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✨</div>
+          <Card hoverable onClick={() => setStep('UPLOAD')} className="glass" style={{ borderRadius: '24px', textAlign: 'center', height: '100%', border: 'none' }}>
+            <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>✨</div>
             <Typography.Title level={4}>AI写真分析</Typography.Title>
             <Typography.Text type="secondary">写真をアップロードして詳細に分析します</Typography.Text>
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card
-            hoverable
-            onClick={() => setStep('SURVEY')}
-            style={{ borderRadius: '16px', textAlign: 'center', height: '100%', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
-          >
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📝</div>
+          <Card hoverable onClick={() => { setImage(null); setStep('SURVEY'); }} className="glass" style={{ borderRadius: '24px', textAlign: 'center', height: '100%', border: 'none' }}>
+            <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>📝</div>
             <Typography.Title level={4}>簡単問診分析</Typography.Title>
             <Typography.Text type="secondary">写真なしで悩みからおすすめを提案します</Typography.Text>
           </Card>
         </Col>
       </Row>
-    </div>
+    </motion.div>
   );
 
   const renderUpload = () => (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', padding: '40px 20px' }}>
-        <Upload.Dragger
-          multiple={false}
-          showUploadList={false}
-          beforeUpload={beforeUpload}
-          style={{ background: '#fafafa', borderRadius: '12px', padding: '40px' }}
-        >
-          <p className="ant-upload-drag-icon">
-            <CameraOutlined style={{ fontSize: '48px', color: '#D4AF37' }} />
-          </p>
-          <p className="ant-upload-text" style={{ fontSize: '1.2rem', fontWeight: 600 }}>分析する写真をアップロード</p>
-          <p className="ant-upload-hint">正面을 향한 밝은 사진을 권장합니다</p>
+    <motion.div initial="hidden" animate="visible" exit="exit" variants={stepVariants} style={{ padding: '20px', textAlign: 'center' }}>
+      <Card className="glass" style={{ borderRadius: '24px', border: 'none', padding: '40px 20px' }}>
+        <Upload.Dragger multiple={false} showUploadList={false} beforeUpload={beforeUpload} style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '16px', padding: '40px', border: '2px dashed var(--c-accent)' }}>
+          <p><CameraOutlined style={{ fontSize: '48px', color: 'var(--c-accent)' }} /></p>
+          <p style={{ fontSize: '1.2rem', fontWeight: 600, marginTop: '16px' }}>分析する写真をアップロード</p>
+          <p style={{ color: 'var(--c-text-secondary)' }}>明るい場所で正面を向いた写真がおすすめです</p>
         </Upload.Dragger>
-        <Button
-          type="text"
-          icon={<SwapLeftOutlined />}
-          onClick={() => setStep('ENTRY')}
-          style={{ marginTop: '24px' }}
-        >
-          戻る
-        </Button>
+        <Button type="text" icon={<SwapLeftOutlined />} onClick={() => setStep('ENTRY')} style={{ marginTop: '24px' }}>戻る</Button>
       </Card>
-    </div>
+    </motion.div>
   );
 
   const renderSurvey = () => (
-    <div style={{ padding: '20px' }}>
+    <motion.div initial="hidden" animate="visible" exit="exit" variants={stepVariants} style={{ padding: '20px' }}>
       <Typography.Title level={4} style={{ textAlign: 'center', marginBottom: '24px' }}>気になる悩みを選択してください</Typography.Title>
       <Row gutter={[16, 16]}>
         {CONCERNS_OPTIONS.map(opt => (
           <Col xs={12} key={opt.id}>
             <Card
               hoverable
-              onClick={() => toggleConcern(opt.label)}
+              onClick={() => setSelectedConcerns(p => p.includes(opt.label) ? p.filter(c => c !== opt.label) : [...p, opt.label])}
               style={{
-                borderRadius: '12px',
+                borderRadius: '16px',
                 textAlign: 'center',
-                border: selectedConcerns.includes(opt.label) ? '2px solid #D4AF37' : '1px solid #f0f0f0',
-                background: selectedConcerns.includes(opt.label) ? '#fffdf5' : '#fff'
+                border: selectedConcerns.includes(opt.label) ? '2px solid var(--c-accent)' : '1px solid transparent',
+                background: selectedConcerns.includes(opt.label) ? '#fffdf5' : 'rgba(255,255,255,0.8)',
+                transition: 'all 0.3s ease'
               }}
-              styles={{ body: { padding: '16px' } }}
+              styles={{ body: { padding: '20px' } }}
             >
-              <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>{opt.icon}</div>
+              <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{opt.icon}</div>
               <Typography.Text strong={selectedConcerns.includes(opt.label)}>{opt.label}</Typography.Text>
             </Card>
           </Col>
         ))}
       </Row>
-
-      <div style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <Button
-          type="primary"
-          size="large"
+      <div style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <button
           onClick={runAnalysis}
           disabled={!image && selectedConcerns.length === 0}
-          style={{ height: '54px', borderRadius: '27px', fontSize: '1.1rem' }}
+          className="btn btn-primary"
+          style={{ width: '100%', fontSize: '1.1rem', opacity: (!image && selectedConcerns.length === 0) ? 0.5 : 1 }}
         >
           分析を開始する
-        </Button>
-        <Button
-          type="text"
-          onClick={() => setStep('ENTRY')}
-          style={{ color: '#888' }}
-        >
-          キャンセル
-        </Button>
+        </button>
+        <Button type="text" onClick={() => setStep('ENTRY')}>キャンセル</Button>
       </div>
-      {error && <Alert title={error} type="error" showIcon style={{ marginTop: '20px' }} />}
-    </div>
+      {error && <Alert title={error} type="error" showIcon style={{ marginTop: '20px', borderRadius: '12px' }} />}
+    </motion.div>
   );
 
   const renderLoading = () => (
     <div style={{ padding: '100px 20px', textAlign: 'center' }}>
-      <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: '#D4AF37' }} spin />} />
-      <Typography.Title level={4} style={{ marginTop: '24px' }}>AI가 상태를 분석 중입니다...</Typography.Title>
-      <Typography.Paragraph type="secondary">少々お待ちください</Typography.Paragraph>
+      <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: 'var(--c-accent)' }} spin />} />
+      <Typography.Title level={4} style={{ marginTop: '32px' }}>{image ? 'AIが写真を分析中...' : 'AIが悩みを分析中...'}</Typography.Title>
+      <Typography.Paragraph type="secondary">あなたに最適なプランを生成しています</Typography.Paragraph>
     </div>
   );
 
-  const renderResult = () => {
-    if (!result) return null;
-    return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ padding: '20px' }}>
-        <Card style={{ borderRadius: '24px', overflow: 'hidden', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <Tag color="gold" style={{ fontSize: '14px', padding: '4px 16px', borderRadius: '20px', marginBottom: '16px' }}>
-              {result.faceType}
-            </Tag>
-            <Typography.Title level={2} style={{ margin: 0 }}>肌分析レポート</Typography.Title>
-          </div>
-
-          <Row gutter={24} style={{ marginBottom: '32px' }}>
-            <Col span={12}>
-              <Statistic
-                title={<Typography.Text type="secondary">推定肌年齢</Typography.Text>}
-                value={result.skinAge}
-                suffix={<Typography.Text style={{ fontSize: '14px' }}>才</Typography.Text>}
-                styles={{ content: { color: '#D4AF37', fontWeight: 700 } }}
-              />
-            </Col>
-            <Col span={12}>
-              <Statistic
-                title={<Typography.Text type="secondary">健康スコア</Typography.Text>}
-                value={result.scores[0] || 85}
-                suffix={<Typography.Text style={{ fontSize: '14px' }}>%</Typography.Text>}
-                styles={{ content: { color: '#52c41a', fontWeight: 700 } }}
-              />
-            </Col>
-          </Row>
-
-          {image && (
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <Image
-                src={image}
-                alt="分析画像"
-                width={200}
-                height={200}
-                style={{ borderRadius: '16px', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                unoptimized
-              />
-            </div>
-          )}
-
+  const renderResult = () => result && (
+    <motion.div initial="hidden" animate="visible" variants={stepVariants} style={{ padding: '20px' }}>
+      <Card className="glass" style={{ borderRadius: '32px', overflow: 'hidden', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <Tag color="#D4AF37" style={{ fontSize: '14px', padding: '6px 20px', borderRadius: '20px', marginBottom: '16px', border: 'none', color: '#fff' }}>{result.faceType}</Tag>
+          <Typography.Title level={2} style={{ margin: 0, fontFamily: 'var(--font-heading)' }}>肌分析レポート</Typography.Title>
+        </div>
+        <Row gutter={24} style={{ marginBottom: '32px' }}>
+          <Col span={12}><Statistic title="推定肌年齢" value={result.skinAge} suffix="才" /></Col>
+          <Col span={12}><Statistic title="健康スコア" value={result.scores?.[0] || 85} suffix="%" /></Col>
+        </Row>
+        {image && <div style={{ textAlign: 'center', marginBottom: '32px' }}><Image src={image} alt="分析" width={200} height={200} style={{ borderRadius: '24px', objectFit: 'cover', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }} unoptimized /></div>}
+        <div style={{ marginBottom: '32px' }}>
+          <Typography.Title level={4}><BulbOutlined style={{ color: 'var(--c-accent)' }} /> AIアドバイス</Typography.Title>
+          <Typography.Paragraph style={{ background: 'rgba(255,255,255,0.6)', padding: '20px', borderRadius: '16px', fontSize: '1rem', lineHeight: '1.8' }}>{result.message || 'おすすめのケアを続けましょう。'}</Typography.Paragraph>
+        </div>
+        {result.recommendations && result.recommendations.length > 0 && (
           <div style={{ marginBottom: '32px' }}>
-            <Typography.Title level={4}><BulbOutlined /> AIアドバイス</Typography.Title>
-            <Typography.Paragraph style={{ background: '#f9f9f9', padding: '16px', borderRadius: '12px' }}>
-              {result.message || '日々のケアに加えて、専門的な施術を組み合わせることでより高い効果가 기대됩니다.'}
-            </Typography.Paragraph>
+            <Typography.Title level={4}><HeartOutlined style={{ color: 'var(--c-accent)' }} /> おすすめの施術</Typography.Title>
+            <Space orientation="vertical" style={{ width: '100%' }} size="middle">
+              {result.recommendations.map((rec, i) => (
+                <Card key={i} size="small" style={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                  <Typography.Title level={5} style={{ margin: 0, color: 'var(--c-accent-dark)' }}>{rec.name}</Typography.Title>
+                  <Typography.Text type="secondary">{rec.description}</Typography.Text>
+                  <Divider style={{ margin: '12px 0' }} />
+                  <Typography.Text strong>{rec.price_range}</Typography.Text>
+                </Card>
+              ))}
+            </Space>
           </div>
-
-          {result.recommendations && result.recommendations.length > 0 && (
-            <div style={{ marginBottom: '32px' }}>
-              <Typography.Title level={4}><HeartOutlined /> おすすめの施術</Typography.Title>
-              <Space orientation="vertical" style={{ width: '100%' }} size="middle">
-                {result.recommendations.map((rec, i) => (
-                  <Card key={i} size="small" style={{ borderRadius: '12px', border: '1px solid #f0f0f0' }}>
-                    <Typography.Title level={5} style={{ margin: 0, color: '#D4AF37' }}>{rec.name}</Typography.Title>
-                    <Typography.Text type="secondary" style={{ fontSize: '13px' }}>{rec.description}</Typography.Text>
-                    <Divider style={{ margin: '8px 0' }} />
-                    <Typography.Text strong>{rec.price_range}</Typography.Text>
-                  </Card>
-                ))}
-              </Space>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <Button
-              type="primary"
-              size="large"
-              icon={<ShopOutlined />}
-              onClick={() => router.push('/hospitals')}
-              style={{ height: '54px', borderRadius: '27px', fontSize: '1.1rem' }}
-            >
-              クリニックを探す
-            </Button>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => setStep('ENTRY')}
-              style={{ height: '54px', borderRadius: '27px' }}
-            >
-              もう一度分析する
-            </Button>
-          </div>
-        </Card>
-      </motion.div>
-    );
-  };
-
-  const getStepNumber = () => {
-    switch (step) {
-      case 'ENTRY': return 0;
-      case 'UPLOAD': return 1;
-      case 'SURVEY': return 2;
-      case 'ANALYZING': return 2;
-      case 'RESULT': return 3;
-      default: return 0;
-    }
-  };
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <button onClick={() => router.push('/hospitals')} className="btn btn-primary" style={{ width: '100%' }}>
+            <ShopOutlined style={{ marginRight: '8px' }} /> クリニックを探す
+          </button>
+          <Button icon={<ReloadOutlined />} onClick={() => setStep('ENTRY')} style={{ height: '50px', borderRadius: '25px' }}>もう一度分析する</Button>
+        </div>
+      </Card>
+    </motion.div>
+  );
 
   return (
-    <div className={styles.container} style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '80px' }}>
+    <div className={styles.container} style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '80px', minHeight: '100vh' }}>
       <div style={{ padding: '0 20px 40px' }}>
-        <Steps
-          size="small"
-          current={getStepNumber()}
-          items={[
-            { title: '選択' },
-            { title: '準備' },
-            { title: '分析' },
-            { title: '結果' },
-          ]}
-          style={{ marginBottom: '40px' }}
-        />
-
-        <Typography.Title level={2} style={{ textAlign: 'center', marginBottom: '32px' }}>AI肌分析</Typography.Title>
-
-        {step === 'ENTRY' && renderEntry()}
-        {step === 'UPLOAD' && renderUpload()}
-        {step === 'SURVEY' && renderSurvey()}
-        {step === 'ANALYZING' && renderLoading()}
-        {step === 'RESULT' && renderResult()}
+        <AnimatePresence mode="wait">
+          {step === 'ENTRY' && <motion.div key="entry">{renderEntry()}</motion.div>}
+          {step === 'UPLOAD' && <motion.div key="upload">{renderUpload()}</motion.div>}
+          {step === 'SURVEY' && <motion.div key="survey">{renderSurvey()}</motion.div>}
+          {step === 'ANALYZING' && <motion.div key="analyzing">{renderLoading()}</motion.div>}
+          {step === 'RESULT' && <motion.div key="result">{renderResult()}</motion.div>}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
 
 export default function AnalysisPage() {
-  return (
-    <Suspense fallback={<div className={styles.container} style={{ textAlign: 'center', padding: '100px' }}><Spin size="large" /></div>}>
-      <AnalysisContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<div style={{ textAlign: 'center', padding: '100px' }}><Spin size="large" /></div>}><AnalysisContent /></Suspense>;
 }
+
